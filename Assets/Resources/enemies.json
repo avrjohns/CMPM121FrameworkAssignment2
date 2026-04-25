@@ -15,11 +15,11 @@
             "damage": 10
         },
         {
-            "name": "test",
+            "name": "warlock",
             "sprite": 2,
-            "hp": 100,
+            "hp": 60,
             "speed": 8,
-            "damage": 25
+            "damage": 15
         }
     ]
 }

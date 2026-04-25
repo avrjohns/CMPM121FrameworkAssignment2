@@ -12,7 +12,11 @@ public class EnemySpawner : MonoBehaviour
     public Image level_selector;
     public GameObject button;
     public GameObject enemy;
-    public SpawnPoint[] SpawnPoints;    
+    public SpawnPoint[] SpawnPoints;
+
+    //creating some private variables to manage levels/waves
+    private LevelData currentLevel;
+    private int currentWave = 0;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -31,6 +35,10 @@ public class EnemySpawner : MonoBehaviour
 
     public void StartLevel(string levelname)
     {
+        //uppdating which level it is (0 since it's the start)
+        currentLevel = JSONLoader.Instance.levels[0];
+        currentWave = 0;
+
         level_selector.gameObject.SetActive(false);
         // this is not nice: we should not have to be required to tell the player directly that the level is starting
         GameManager.Instance.player.GetComponent<PlayerController>().StartLevel();
@@ -53,27 +61,66 @@ public class EnemySpawner : MonoBehaviour
             GameManager.Instance.countdown--;
         }
         GameManager.Instance.state = GameManager.GameState.INWAVE;
-        for (int i = 0; i < 10; ++i)
+
+        //Updated to change enemy based on current player level
+        foreach (SpawnData spawn in currentLevel.spawns)
         {
-            yield return SpawnZombie();
+            StartCoroutine(SpawnEnemyType(spawn));
         }
+
         yield return new WaitWhile(() => GameManager.Instance.enemy_count > 0);
         GameManager.Instance.state = GameManager.GameState.WAVEEND;
     }
 
-    IEnumerator SpawnZombie()
+    IEnumerator SpawnEnemyType(SpawnData spawn)
     {
-        SpawnPoint spawn_point = SpawnPoints[Random.Range(0, SpawnPoints.Length)];
-        Vector2 offset = Random.insideUnitCircle * 1.8f;
-                
-        Vector3 initial_position = spawn_point.transform.position + new Vector3(offset.x, offset.y, 0);
-        GameObject new_enemy = Instantiate(enemy, initial_position, Quaternion.identity);
+        //Finds the enemy from the json file
+        EnemyData baseEnemy = JSONLoader.Instance.enemies.Find(e => e.name == spawn.enemy);
 
-        new_enemy.GetComponent<SpriteRenderer>().sprite = GameManager.Instance.enemySpriteManager.Get(0);
-        EnemyController en = new_enemy.GetComponent<EnemyController>();
-        en.hp = new Hittable(50, Hittable.Team.MONSTERS, new_enemy);
-        en.speed = 10;
-        GameManager.Instance.AddEnemy(new_enemy);
-        yield return new WaitForSeconds(0.5f);
+        //error if it doesn't exist
+        if (baseEnemy == null)
+        {
+            Debug.LogError($"Enemy type {spawn.enemy} not found!");
+            yield break;
+        }
+
+        int totalCount = 3;
+        int spawned = 0;
+        int sequenceIndex = 0;
+
+        //Keep spawning until all enemies are spawned
+        while (spawned < totalCount)
+        {
+            //Cycles through a size array to make sure group sizes vary (pattern)
+            int groupSize = spawn.sequence[sequenceIndex % spawn.sequence.Length];
+
+            //Makes sure not to overspawn
+            int actualGroupSize = Mathf.Min(groupSize, totalCount - spawned);
+
+            //spawns groups at once
+            for (int i = 0; i < actualGroupSize; i++)
+            {
+                SpawnPoint spawnPoint = SpawnPoints[Random.Range(0, SpawnPoints.Length)];
+                Vector2 offset = Random.insideUnitCircle * 1.8f;
+                Vector3 position = spawnPoint.transform.position + new Vector3(offset.x, offset.y, 0);
+
+                GameObject newEnemy = Instantiate(enemy, position, Quaternion.identity);
+                newEnemy.GetComponent<SpriteRenderer>().sprite =
+                    GameManager.Instance.enemySpriteManager.Get(baseEnemy.sprite);
+
+                EnemyController en = newEnemy.GetComponent<EnemyController>();
+                en.hp = new Hittable(baseEnemy.hp, Hittable.Team.MONSTERS, newEnemy);
+                en.speed = baseEnemy.speed;
+
+                GameManager.Instance.AddEnemy(newEnemy);
+                spawned++;
+            }
+
+            sequenceIndex++;
+
+            //Waits before spawning in next group
+            if (spawned < totalCount)
+                yield return new WaitForSeconds(spawn.delay);
+        }
     }
 }

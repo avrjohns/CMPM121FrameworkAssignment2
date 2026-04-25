@@ -87,8 +87,7 @@ public class JSONLoader : MonoBehaviour
 
         if (levelsText != null)
         {
-            LevelListWrapper wrapper = JsonUtility.FromJson<LevelListWrapper>(levelsText.text);
-            levels = wrapper.levels;
+            levels = Newtonsoft.Json.JsonConvert.DeserializeObject<List<LevelData>>(levelsText.text);
             Debug.Log($"Loaded {levels.Count} difficulty levels");
         }
         else
