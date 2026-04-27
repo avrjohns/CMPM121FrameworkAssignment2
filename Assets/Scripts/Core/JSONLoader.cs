@@ -38,12 +38,6 @@ public class EnemyListWrapper
     public List<EnemyData> enemies;
 }
 
-[System.Serializable]
-public class LevelListWrapper
-{
-    public List<LevelData> levels;
-}
-
 public class JSONLoader : MonoBehaviour
 {
     public static JSONLoader Instance;
@@ -57,6 +51,7 @@ public class JSONLoader : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            LoadData();
         }
         else
         {
@@ -66,7 +61,7 @@ public class JSONLoader : MonoBehaviour
 
     void Start()
     {
-        LoadData();
+        
     }
 
     public void LoadData()
@@ -76,7 +71,7 @@ public class JSONLoader : MonoBehaviour
 
         if (enemiesText != null)
         {
-            EnemyListWrapper wrapper = JsonUtility.FromJson<EnemyListWrapper>(enemiesText.text);
+            EnemyListWrapper wrapper = Newtonsoft.Json.JsonConvert.DeserializeObject<EnemyListWrapper>(enemiesText.text);
             enemies = wrapper.enemies;
             Debug.Log($"Loaded {enemies.Count} enemy types");
         }

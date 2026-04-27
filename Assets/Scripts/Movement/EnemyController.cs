@@ -8,7 +8,7 @@ public class EnemyController : MonoBehaviour
     public Hittable hp;
     public HealthBar healthui;
     public bool dead;
-
+    public int attackDamage = 5;
     public float last_attack;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -48,6 +48,7 @@ public class EnemyController : MonoBehaviour
         {
             dead = true;
             GameManager.Instance.RemoveEnemy(gameObject);
+            EnemySpawner.Instance.EnemyDied();
             Destroy(gameObject);
         }
     }

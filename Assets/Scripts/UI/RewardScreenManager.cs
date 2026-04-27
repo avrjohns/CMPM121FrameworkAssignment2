@@ -1,15 +1,16 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RewardScreenManager : MonoBehaviour
 {
     public GameObject rewardUI;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public Button continueButton; 
+
     void Start()
     {
-        
+        if (continueButton != null) { continueButton.onClick.AddListener(OnContinueClicked);}
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (GameManager.Instance.state == GameManager.GameState.WAVEEND)
@@ -20,5 +21,11 @@ public class RewardScreenManager : MonoBehaviour
         {
             rewardUI.SetActive(false);
         }
+    }
+
+    void OnContinueClicked()
+    {
+        rewardUI.SetActive(false);
+        EnemySpawner.Instance.NextWave();
     }
 }
