@@ -16,6 +16,8 @@ public class EnemySpawner : MonoBehaviour
     public GameObject rewardScreen;
     public GameObject gameOverScreen;
     public GameObject victoryScreen;
+    public TMPro.TextMeshProUGUI waveStatsText;
+    private float waveStartTime;
 
     private LevelData currentLevel;
     private int currentWave = 0;
@@ -128,6 +130,7 @@ public class EnemySpawner : MonoBehaviour
         }
 
         GameManager.Instance.state = GameManager.GameState.INWAVE;
+        waveStartTime = Time.time;
 
         foreach (SpawnData spawn in currentLevel.spawns)
         {
@@ -251,6 +254,9 @@ public class EnemySpawner : MonoBehaviour
             ShowVictory();
             return;
         }
+
+        float timeTaken = Time.time - waveStartTime;
+        waveStatsText.text = $"Wave {currentWave} Complete!\nTime: {timeTaken:F1} seconds";
 
         rewardScreen.SetActive(true);
         Debug.Log($"Wave {currentWave} complete! Click Continue.");
