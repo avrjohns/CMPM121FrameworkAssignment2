@@ -71,7 +71,7 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        currentWave = 9;
+        currentWave = 0;
         level_selector.gameObject.SetActive(false);
         GameManager.Instance.player.GetComponent<PlayerController>().StartLevel();
         NextWave();
