@@ -13,16 +13,16 @@ public class RPNEvaluatorWrapper : MonoBehaviour
 
     public static int Evaluate(string expression, Dictionary<string, int> variables)
     {
-        return RPNEvaluatorWrapper.Evaluate(expression, variables);
+        return RPNEvaluator.RPNEvaluator.Evaluate(expression, variables);
     }
 
     public static float Evaluatef(string expression, Dictionary<string, float> variables)
     {
-        return RPNEvaluatorWrapper.Evaluatef(expression, variables);
+        return RPNEvaluator.RPNEvaluator.Evaluatef(expression, variables);
     }
 
     public static float Evaluatef(string expression, Dictionary<string, int> variables)
     {
-        return RPNEvaluatorWrapper.Evaluatef(expression, variables);
+        return RPNEvaluator.RPNEvaluator.Evaluatef(expression, variables);
     }
 }

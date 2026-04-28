@@ -12,6 +12,7 @@ public class EnemySpawner : MonoBehaviour
     public GameObject button;
     public GameObject enemy;
     public SpawnPoint[] SpawnPoints;
+    public GameObject rewardScreen;
 
     private LevelData currentLevel;
     private int currentWave = 0;
@@ -75,6 +76,13 @@ public class EnemySpawner : MonoBehaviour
 
     public void NextWave()
     {
+        Debug.Log($"NextWave called, currentLevel = {currentLevel?.name}");
+        if (currentLevel == null)
+        {
+            Debug.LogError("No level selected!");
+            return;
+        }
+
         if (currentLevel.waves > 0 && currentWave >= currentLevel.waves)
         {
             ShowVictory();
@@ -213,6 +221,7 @@ public class EnemySpawner : MonoBehaviour
 
     void ShowWaveComplete()
     {
+        rewardScreen.SetActive(true);
         Debug.Log($"Wave {currentWave} complete! Click Continue.");
     }
 

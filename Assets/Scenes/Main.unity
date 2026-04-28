@@ -569,6 +569,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rewardUI: {fileID: 1709288111}
+  continueButton: {fileID: 0}
 --- !u!4 &220180078
 Transform:
   m_ObjectHideFlags: 0
@@ -970,10 +971,22 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 519420033}
+      - m_Target: {fileID: 1380880732}
         m_TargetAssemblyTypeName: EnemySpawner, Assembly-CSharp
         m_MethodName: NextWave
         m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1709288111}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -1918,6 +1931,7 @@ MonoBehaviour:
   - {fileID: 2073311049}
   - {fileID: 1577913788}
   - {fileID: 587991943}
+  rewardScreen: {fileID: 0}
 --- !u!1 &532755679
 GameObject:
   m_ObjectHideFlags: 0
@@ -4238,6 +4252,7 @@ MonoBehaviour:
   - {fileID: 1577913788}
   - {fileID: 2073311049}
   - {fileID: 587991943}
+  rewardScreen: {fileID: 1709288111}
 --- !u!4 &1380880733
 Transform:
   m_ObjectHideFlags: 0
