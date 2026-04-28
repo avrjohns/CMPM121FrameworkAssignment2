@@ -13,6 +13,8 @@ public class EnemySpawner : MonoBehaviour
     public GameObject enemy;
     public SpawnPoint[] SpawnPoints;
     public GameObject rewardScreen;
+    public GameObject gameOverScreen;
+    public GameObject victoryScreen;
 
     private LevelData currentLevel;
     private int currentWave = 0;
@@ -45,7 +47,7 @@ public class EnemySpawner : MonoBehaviour
             Debug.LogError("No levels loaded! Cannot create buttons.");
             return;
         }
-        float startY = 130;
+        float startY = 60;
         float spacing = 60;
 
         for (int i = 0; i < levels.Count; i++)
@@ -93,6 +95,28 @@ public class EnemySpawner : MonoBehaviour
         StartCoroutine(SpawnWave());
     }
 
+    public void ReturnToMenu()
+    {
+        // destroy all remaining enemies
+        GameObject[] units = GameObject.FindGameObjectsWithTag("unit");
+        foreach (GameObject u in units)
+        {
+            // make sure we don't destroy the player
+            if (u.GetComponent<EnemyController>() != null)
+            {
+                Destroy(u);
+            }
+        }
+
+        gameOverScreen.SetActive(false);
+        victoryScreen.SetActive(false);
+        rewardScreen.SetActive(false);
+        currentLevel = null;
+        currentWave = 0;
+        level_selector.gameObject.SetActive(true);
+        GameManager.Instance.state = GameManager.GameState.GAMEOVER;
+    }
+
     IEnumerator SpawnWave()
     {
         GameManager.Instance.state = GameManager.GameState.COUNTDOWN;
@@ -110,7 +134,7 @@ public class EnemySpawner : MonoBehaviour
             yield return StartCoroutine(SpawnEnemyType(spawn));
         }
 
-        yield return new WaitWhile(() => GameManager.Instance.enemy_count > 0);
+        yield return new WaitWhile(() => GameManager.Instance.enemy_count > 0 && !IsPlayerDead());
 
         if (IsPlayerDead())
         {
@@ -227,12 +251,14 @@ public class EnemySpawner : MonoBehaviour
 
     void ShowVictory()
     {
+        victoryScreen.SetActive(true);
         Debug.Log("Victory! All waves survived!");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     void ShowGameOver()
     {
+        gameOverScreen.SetActive(true);
         Debug.Log("Game Over! You died!");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
