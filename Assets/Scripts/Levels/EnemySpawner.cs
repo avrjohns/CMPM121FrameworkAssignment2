@@ -1,8 +1,9 @@
-using UnityEngine;
-using System.Collections.Generic;
-using UnityEngine.UI;
+using NUnit.Framework;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -70,7 +71,7 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        currentWave = 0;
+        currentWave = 9;
         level_selector.gameObject.SetActive(false);
         GameManager.Instance.player.GetComponent<PlayerController>().StartLevel();
         NextWave();
@@ -97,13 +98,12 @@ public class EnemySpawner : MonoBehaviour
 
     public void ReturnToMenu()
     {
-        // destroy all remaining enemies
         GameObject[] units = GameObject.FindGameObjectsWithTag("unit");
         foreach (GameObject u in units)
         {
-            // make sure we don't destroy the player
             if (u.GetComponent<EnemyController>() != null)
             {
+                GameManager.Instance.RemoveEnemy(u); // remove from list first
                 Destroy(u);
             }
         }
@@ -245,6 +245,13 @@ public class EnemySpawner : MonoBehaviour
 
     void ShowWaveComplete()
     {
+        // if this was the last wave show victory instead
+        if (currentLevel.waves > 0 && currentWave >= currentLevel.waves)
+        {
+            ShowVictory();
+            return;
+        }
+
         rewardScreen.SetActive(true);
         Debug.Log($"Wave {currentWave} complete! Click Continue.");
     }
