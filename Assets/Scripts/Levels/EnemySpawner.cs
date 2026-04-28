@@ -18,6 +18,7 @@ public class EnemySpawner : MonoBehaviour
     public GameObject victoryScreen;
     public TMPro.TextMeshProUGUI waveStatsText;
     private float waveStartTime;
+    public TMPro.TextMeshProUGUI waveNumberText;
 
     private LevelData currentLevel;
     private int currentWave = 0;
@@ -130,6 +131,10 @@ public class EnemySpawner : MonoBehaviour
         }
 
         GameManager.Instance.state = GameManager.GameState.INWAVE;
+        if (currentLevel.waves > 0)
+            waveNumberText.text = $"Wave {currentWave} of {currentLevel.waves}";
+        else
+            waveNumberText.text = $"Wave {currentWave}";
         waveStartTime = Time.time;
 
         foreach (SpawnData spawn in currentLevel.spawns)
