@@ -29,15 +29,15 @@ public class EnemySpawner : MonoBehaviour
 
     void Start()
     {
-        Debug.Log($"JSONLoader.Instance.levels count: {JSONLoader.Instance.levels?.Count}");
-        Debug.Log($"level_selector: {level_selector}");
-        Debug.Log($"button prefab: {button}");
+        //Debug.Log($"JSONLoader.Instance.levels count: {JSONLoader.Instance.levels?.Count}");
+        //Debug.Log($"level_selector: {level_selector}");
+        //Debug.Log($"button prefab: {button}");
         CreateDifficultyButtons();
     }
 
     void CreateDifficultyButtons()
     {
-        Debug.Log($"Creating buttons for {JSONLoader.Instance.levels?.Count} levels");
+        //Debug.Log($"Creating buttons for {JSONLoader.Instance.levels?.Count} levels");
         foreach (Transform child in level_selector.transform)
         {
             Destroy(child.gameObject);
@@ -47,7 +47,7 @@ public class EnemySpawner : MonoBehaviour
 
         if (levels == null || levels.Count == 0)
         {
-            Debug.LogError("No levels loaded! Cannot create buttons.");
+            //Debug.LogError("No levels loaded! Cannot create buttons.");
             return;
         }
         float startY = 60;
@@ -69,7 +69,7 @@ public class EnemySpawner : MonoBehaviour
         currentLevel = JSONLoader.Instance.levels.Find(l => l.name == levelname);
         if (currentLevel == null)
         {
-            Debug.LogError($"Level '{levelname}' not found!");
+            //Debug.LogError($"Level '{levelname}' not found!");
             return;
         }
 
@@ -81,10 +81,10 @@ public class EnemySpawner : MonoBehaviour
 
     public void NextWave()
     {
-        Debug.Log($"NextWave called, currentLevel = {currentLevel?.name}");
+        //Debug.Log($"NextWave called, currentLevel = {currentLevel?.name}");
         if (currentLevel == null)
         {
-            Debug.LogError("No level selected!");
+            //Debug.LogError("No level selected!");
             return;
         }
 
@@ -154,7 +154,7 @@ public class EnemySpawner : MonoBehaviour
         EnemyData baseEnemy = JSONLoader.Instance.enemies.Find(e => e.name == spawn.enemy);
         if (baseEnemy == null)
         {
-            Debug.LogError($"Enemy '{spawn.enemy}' not found!");
+            //Debug.LogError($"Enemy '{spawn.enemy}' not found!");
             yield break;
         }
 
@@ -259,25 +259,25 @@ public class EnemySpawner : MonoBehaviour
         waveStatsText.text = $"Wave {currentWave} Complete!\nTime: {timeTaken:F1} seconds";
 
         rewardScreen.SetActive(true);
-        Debug.Log($"Wave {currentWave} complete! Click Continue.");
+        //Debug.Log($"Wave {currentWave} complete! Click Continue.");
     }
 
     void ShowVictory()
     {
         victoryScreen.SetActive(true);
-        Debug.Log("Victory! All waves survived!");
+        //Debug.Log("Victory! All waves survived!");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     void ShowGameOver()
     {
         gameOverScreen.SetActive(true);
-        Debug.Log("Game Over! You died!");
+        //Debug.Log("Game Over! You died!");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     public void EnemyDied()
     {
-        Debug.Log("Enemy died notification received");
+        //Debug.Log("Enemy died notification received");
     }
 }
