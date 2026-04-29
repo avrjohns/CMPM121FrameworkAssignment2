@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
 using RPNLib = RPNEvaluator.RPNEvaluator;
 
 public class RPNEvaluatorWrapper : MonoBehaviour
