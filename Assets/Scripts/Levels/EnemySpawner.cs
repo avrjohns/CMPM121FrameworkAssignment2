@@ -1,9 +1,8 @@
-using NUnit.Framework;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using System.Collections.Generic;
 using UnityEngine.UI;
+using System.Collections;
+using System.Linq;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -13,12 +12,6 @@ public class EnemySpawner : MonoBehaviour
     public GameObject button;
     public GameObject enemy;
     public SpawnPoint[] SpawnPoints;
-    public GameObject rewardScreen;
-    public GameObject gameOverScreen;
-    public GameObject victoryScreen;
-    public TMPro.TextMeshProUGUI waveStatsText;
-    private float waveStartTime;
-    public TMPro.TextMeshProUGUI waveNumberText;
 
     public LevelData currentLevel;
     private int currentWave = 0;
@@ -34,11 +27,17 @@ public class EnemySpawner : MonoBehaviour
 
     void Start()
     {
+        //
+        Debug.Log($"JSONLoader.Instance.levels count: {JSONLoader.Instance.levels?.Count}");
+        Debug.Log($"level_selector: {level_selector}");
+        // Debug.Log($"button prefab: {button}");
+
         CreateDifficultyButtons();
     }
 
     void CreateDifficultyButtons()
     {
+        // Debug.Log($"Creating buttons for {JSONLoader.Instance.levels?.Count} levels");
         foreach (Transform child in level_selector.transform)
         {
             Destroy(child.gameObject);
@@ -48,15 +47,18 @@ public class EnemySpawner : MonoBehaviour
 
         if (levels == null || levels.Count == 0)
         {
+            Debug.LogError("none of the levels loaded");
             return;
         }
-        float startY = 60;
+
+        float startY = 130;
         float spacing = 60;
 
         for (int i = 0; i < levels.Count; i++)
         {
             GameObject selector = Instantiate(button, level_selector.transform);
             selector.transform.localPosition = new Vector3(0, startY - (i * spacing), 0);
+
 
             MenuSelectorController controller = selector.GetComponent<MenuSelectorController>();
 
@@ -70,6 +72,9 @@ public class EnemySpawner : MonoBehaviour
         currentLevel = JSONLoader.Instance.levels.Find(l => l.name == levelname);
         if (currentLevel == null)
         {
+
+            Debug.LogError($"Level '{levelname}' not found!");
+
             return;
         }
 
@@ -83,6 +88,7 @@ public class EnemySpawner : MonoBehaviour
     {
         if (currentLevel == null)
         {
+            Debug.LogError("NextWave() called but currentLevel is null?");
             return;
         }
 
@@ -94,27 +100,6 @@ public class EnemySpawner : MonoBehaviour
 
         currentWave = currentWave + 1;
         StartCoroutine(SpawnWave());
-    }
-
-    public void ReturnToMenu()
-    {
-        GameObject[] units = GameObject.FindGameObjectsWithTag("unit");
-        foreach (GameObject u in units)
-        {
-            if (u.GetComponent<EnemyController>() != null)
-            {
-                GameManager.Instance.RemoveEnemy(u);
-                Destroy(u);
-            }
-        }
-
-        gameOverScreen.SetActive(false);
-        victoryScreen.SetActive(false);
-        rewardScreen.SetActive(false);
-        currentLevel = null;
-        currentWave = 0;
-        level_selector.gameObject.SetActive(true);
-        GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     IEnumerator SpawnWave()
@@ -134,16 +119,15 @@ public class EnemySpawner : MonoBehaviour
         }
 
         GameManager.Instance.state = GameManager.GameState.INWAVE;
-        if (currentLevel.waves > 0)
-            waveNumberText.text = $"Wave {currentWave} of {currentLevel.waves}";
-        else
-            waveNumberText.text = $"Wave {currentWave}";
-        waveStartTime = Time.time;
+
 
         foreach (SpawnData spawn in currentLevel.spawns)
         {
             yield return StartCoroutine(SpawnEnemyType(spawn));
         }
+
+        Debug.Log($"All spawning done. Spawned: {enemiesSpawnedThisWave}, Killed so far: {enemiesKilledThisWave}");
+
 
         yield return new WaitUntil(() => enemiesKilledThisWave >= enemiesSpawnedThisWave);
 
@@ -161,9 +145,13 @@ public class EnemySpawner : MonoBehaviour
 
     IEnumerator SpawnEnemyType(SpawnData spawn)
     {
+
+        Debug.Log($"Spawning {spawn.enemy} for wave {currentWave}");
+
         EnemyData baseEnemy = JSONLoader.Instance.enemies.Find(e => e.name == spawn.enemy);
         if (baseEnemy == null)
         {
+            Debug.LogError($"Enemy '{spawn.enemy}' not found!");
             yield break;
         }
 
@@ -188,6 +176,7 @@ public class EnemySpawner : MonoBehaviour
         }
 
         int spawned = 0;
+
         int sequenceInd = 0;
 
         while (spawned < totalCount)
@@ -219,10 +208,9 @@ public class EnemySpawner : MonoBehaviour
 
             sequenceInd = sequenceInd + 1;
 
+
             if (spawned < totalCount)
-            {
-                yield return new WaitForSeconds(delay);
-            }
+            { yield return new WaitForSeconds(delay); }
         }
     }
 
@@ -263,32 +251,24 @@ public class EnemySpawner : MonoBehaviour
 
     void ShowWaveComplete()
     {
-        if (currentLevel.waves > 0 && currentWave >= currentLevel.waves)
-        {
-            ShowVictory();
-            return;
-        }
-
-        float timeTaken = Time.time - waveStartTime;
-        waveStatsText.text = $"Wave {currentWave} Complete!\nTime: {timeTaken:F1} seconds";
-
-        rewardScreen.SetActive(true);
+        Debug.Log($"Wave {currentWave} done");
     }
 
     void ShowVictory()
     {
-        victoryScreen.SetActive(true);
+        Debug.Log("win");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     void ShowGameOver()
     {
-        gameOverScreen.SetActive(true);
+        Debug.Log("Game Over");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     public void EnemyDied()
     {
         enemiesKilledThisWave++;
+        Debug.Log("Enemy died");
     }
 }
