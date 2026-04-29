@@ -41,7 +41,6 @@ public class EnemyListWrapper
 public class JSONLoader : MonoBehaviour
 {
     public static JSONLoader Instance;
-
     public List<EnemyData> enemies;
     public List<LevelData> levels;
 
@@ -50,22 +49,21 @@ public class JSONLoader : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
             LoadData();
         }
         else
         {
-            Destroy(gameObject);
-        }
-    }
+            Destroy(gameObject);}}
 
     void Start()
     {
-        
+        // LoadData();
     }
 
     public void LoadData()
     {
+
         TextAsset enemiesText = Resources.Load<TextAsset>("enemies");
         TextAsset levelsText = Resources.Load<TextAsset>("levels");
 
@@ -74,10 +72,9 @@ public class JSONLoader : MonoBehaviour
             EnemyListWrapper wrapper = Newtonsoft.Json.JsonConvert.DeserializeObject<EnemyListWrapper>(enemiesText.text);
             enemies = wrapper.enemies;
             Debug.Log($"Loaded {enemies.Count} enemy types");
-        }
-        else
+        } else
         {
-            Debug.LogError("enemies.json not found in Resources!");
+            Debug.LogError("enemies.json not found");
         }
 
         if (levelsText != null)
@@ -85,9 +82,8 @@ public class JSONLoader : MonoBehaviour
             levels = Newtonsoft.Json.JsonConvert.DeserializeObject<List<LevelData>>(levelsText.text);
             Debug.Log($"Loaded {levels.Count} difficulty levels");
         }
-        else
-        {
-            Debug.LogError("levels.json not found in Resources!");
+        else{
+            Debug.LogError("levels.json not found ");
         }
     }
 }

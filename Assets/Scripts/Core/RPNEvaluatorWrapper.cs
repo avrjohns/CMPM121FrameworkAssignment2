@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
-using RPNEvaluator;
+
+
+using RPNLib = RPNEvaluator.RPNEvaluator;
 
 public class RPNEvaluatorWrapper : MonoBehaviour
 {
-    public static RPNEvaluatorWrapper Instance;
+    public static RPNEvaluatorWrapper Instance { get; private set; }
 
     void Awake()
     {
@@ -13,16 +15,16 @@ public class RPNEvaluatorWrapper : MonoBehaviour
 
     public static int Evaluate(string expression, Dictionary<string, int> variables)
     {
-        return RPNEvaluatorWrapper.Evaluate(expression, variables);
+        return RPNLib.Evaluate(expression, variables);
     }
 
     public static float Evaluatef(string expression, Dictionary<string, float> variables)
     {
-        return RPNEvaluatorWrapper.Evaluatef(expression, variables);
+        return RPNLib.Evaluatef(expression, variables);
     }
 
     public static float Evaluatef(string expression, Dictionary<string, int> variables)
     {
-        return RPNEvaluatorWrapper.Evaluatef(expression, variables);
+        return RPNLib.Evaluatef(expression, variables);
     }
 }

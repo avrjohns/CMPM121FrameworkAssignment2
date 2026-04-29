@@ -10,7 +10,7 @@ public class EnemyController : MonoBehaviour
     public bool dead;
     public int attackDamage = 5;
     public float last_attack;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // Start is called once 
     void Start()
     {
         target = GameManager.Instance.player.transform;
@@ -18,7 +18,7 @@ public class EnemyController : MonoBehaviour
         healthui.SetHealth(hp);
     }
 
-    // Update is called once per frame
+    // Update called once
     void Update()
     {
         Vector3 direction = target.position - transform.position;

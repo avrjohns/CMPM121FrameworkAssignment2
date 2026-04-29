@@ -13,8 +13,9 @@ public class EnemySpawner : MonoBehaviour
     public GameObject enemy;
     public SpawnPoint[] SpawnPoints;
 
-    private LevelData currentLevel;
+    public LevelData currentLevel;
     private int currentWave = 0;
+    private bool isSpawning = false;
 
     void Awake()
     {
@@ -23,15 +24,17 @@ public class EnemySpawner : MonoBehaviour
 
     void Start()
     {
+        //
         Debug.Log($"JSONLoader.Instance.levels count: {JSONLoader.Instance.levels?.Count}");
         Debug.Log($"level_selector: {level_selector}");
-        Debug.Log($"button prefab: {button}");
+       // Debug.Log($"button prefab: {button}");
+
         CreateDifficultyButtons();
     }
 
     void CreateDifficultyButtons()
     {
-        Debug.Log($"Creating buttons for {JSONLoader.Instance.levels?.Count} levels");
+       // Debug.Log($"Creating buttons for {JSONLoader.Instance.levels?.Count} levels");
         foreach (Transform child in level_selector.transform)
         {
             Destroy(child.gameObject);
@@ -41,9 +44,10 @@ public class EnemySpawner : MonoBehaviour
 
         if (levels == null || levels.Count == 0)
         {
-            Debug.LogError("No levels loaded! Cannot create buttons.");
+            Debug.LogError("none of the levels loaded");
             return;
         }
+
         float startY = 130;
         float spacing = 60;
 
@@ -52,7 +56,9 @@ public class EnemySpawner : MonoBehaviour
             GameObject selector = Instantiate(button, level_selector.transform);
             selector.transform.localPosition = new Vector3(0, startY - (i * spacing), 0);
 
+
             MenuSelectorController controller = selector.GetComponent<MenuSelectorController>();
+
             controller.spawner = this;
             controller.SetLevel(levels[i].name);
         }
@@ -61,32 +67,45 @@ public class EnemySpawner : MonoBehaviour
     public void StartLevel(string levelname)
     {
         currentLevel = JSONLoader.Instance.levels.Find(l => l.name == levelname);
-        if (currentLevel == null)
-        {
+        if (currentLevel == null){
+
             Debug.LogError($"Level '{levelname}' not found!");
+
             return;
         }
 
-        currentWave = 0;
+        currentWave = 1;
         level_selector.gameObject.SetActive(false);
         GameManager.Instance.player.GetComponent<PlayerController>().StartLevel();
-        NextWave();
+        StartCoroutine(SpawnWave());
     }
 
     public void NextWave()
     {
+        if (currentLevel == null)
+        {
+            Debug.LogError("NextWave() called but currentLevel is null?");
+            return;
+        }
+
         if (currentLevel.waves > 0 && currentWave >= currentLevel.waves)
         {
             ShowVictory();
             return;
         }
 
-        currentWave++;
+        currentWave = currentWave++;
         StartCoroutine(SpawnWave());
     }
 
     IEnumerator SpawnWave()
     {
+        if (isSpawning) yield break;
+        isSpawning = true;
+
+        enemiesSpawnedThisWave = 0;  
+        enemiesKilledThisWave = 0;  
+
         GameManager.Instance.state = GameManager.GameState.COUNTDOWN;
         GameManager.Instance.countdown = 3;
         for (int i = 3; i > 0; i--)
@@ -97,25 +116,47 @@ public class EnemySpawner : MonoBehaviour
 
         GameManager.Instance.state = GameManager.GameState.INWAVE;
 
+    
         foreach (SpawnData spawn in currentLevel.spawns)
         {
             yield return StartCoroutine(SpawnEnemyType(spawn));
         }
 
-        yield return new WaitWhile(() => GameManager.Instance.enemy_count > 0);
+        Debug.Log($"All spawning done. Spawned: {enemiesSpawnedThisWave}, Killed so far: {enemiesKilledThisWave}");
+
+   
+        yield return new WaitUntil(() => enemiesKilledThisWave >= enemiesSpawnedThisWave);
 
         if (IsPlayerDead())
         {
             ShowGameOver();
+            isSpawning = false;
             yield break;
         }
 
         GameManager.Instance.state = GameManager.GameState.WAVEEND;
         ShowWaveComplete();
+        isSpawning = false;
     }
 
     IEnumerator SpawnEnemyType(SpawnData spawn)
     {
+
+        Debug.Log($"Spawning {spawn.enemy} for wave {currentWave}");
+
+        // test
+       // try
+      //  {
+         //   int testCount = RPNEvaluatorWrapper.Evaluate("5 wave +",
+         //       new Dictionary<string, int> { { "base", 0 }, { "wave", currentWave } });
+          //  Debug.Log($"RPN Test: 5 wave + = {testCount}");
+     //   }
+       // catch (System.Exception e)
+       // {
+          //  Debug.LogError($"RPN FAILED: {e.Message}");
+          //  yield break;
+      //  }
+
         EnemyData baseEnemy = JSONLoader.Instance.enemies.Find(e => e.name == spawn.enemy);
         if (baseEnemy == null)
         {
@@ -137,23 +178,25 @@ public class EnemySpawner : MonoBehaviour
 
         int delay = spawn.delay;
         int[] sequence = spawn.sequence;
+
         if (sequence == null || sequence.Length == 0)
         {
-            sequence = new int[] { 1 };
-        }
+            sequence = new int[] { 1 }; }
 
         int spawned = 0;
-        int sequenceIndex = 0;
+
+        int sequenceInd = 0;
 
         while (spawned < totalCount)
         {
-            int groupSize = sequence[sequenceIndex % sequence.Length];
-            int actualGroupSize = Mathf.Min(groupSize, totalCount - spawned);
+            int collectionSize = sequence[sequenceInd % sequence.Length];
+            int actualcollectionSize = Mathf.Min(collectionSize, totalCount - spawned);
 
             SpawnPoint spawnPoint = GetSpawnPoint(spawn.location);
 
-            for (int i = 0; i < actualGroupSize; i++)
+            for (int i = 0; i < actualcollectionSize; i++)
             {
+                //vector2 offset = Random.insideUnitCircle * 0.5f;
                 Vector2 offset = Random.insideUnitCircle * 1.8f;
                 Vector3 position = spawnPoint.transform.position + new Vector3(offset.x, offset.y, 0);
 
@@ -171,12 +214,11 @@ public class EnemySpawner : MonoBehaviour
                 spawned++;
             }
 
-            sequenceIndex++;
+            sequenceInd = sequenceInd + 1;
+            
 
             if (spawned < totalCount)
-            {
-                yield return new WaitForSeconds(delay);
-            }
+            { yield return new WaitForSeconds(delay); }
         }
     }
 
@@ -190,11 +232,15 @@ public class EnemySpawner : MonoBehaviour
         if (location.StartsWith("random "))
         {
             string type = location.Substring(7);
+
             SpawnPoint.SpawnName spawnName = SpawnPoint.SpawnName.RED;
+
             if (type == "green") spawnName = SpawnPoint.SpawnName.GREEN;
+
             else if (type == "bone") spawnName = SpawnPoint.SpawnName.BONE;
 
             SpawnPoint[] matching = System.Array.FindAll(SpawnPoints, sp => sp.kind == spawnName);
+
             if (matching.Length > 0)
             {
                 return matching[Random.Range(0, matching.Length)];
@@ -213,23 +259,23 @@ public class EnemySpawner : MonoBehaviour
 
     void ShowWaveComplete()
     {
-        Debug.Log($"Wave {currentWave} complete! Click Continue.");
+        Debug.Log($"Wave {currentWave} done");
     }
 
     void ShowVictory()
     {
-        Debug.Log("Victory! All waves survived!");
+        Debug.Log("win");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     void ShowGameOver()
     {
-        Debug.Log("Game Over! You died!");
+        Debug.Log("Game Over");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     public void EnemyDied()
     {
-        Debug.Log("Enemy died notification received");
+        Debug.Log("Enemy died");
     }
 }

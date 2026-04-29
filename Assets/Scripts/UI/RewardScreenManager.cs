@@ -13,6 +13,7 @@ public class RewardScreenManager : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance == null) return;
         if (GameManager.Instance.state == GameManager.GameState.WAVEEND)
         {
             rewardUI.SetActive(true);
@@ -26,6 +27,17 @@ public class RewardScreenManager : MonoBehaviour
     void OnContinueClicked()
     {
         rewardUI.SetActive(false);
+        if (EnemySpawner.Instance == null)
+        {
+            Debug.LogError("EnemySpawner instance null");
+            return;
+        }
+
+        if (EnemySpawner.Instance.currentLevel == null)
+        {
+            Debug.LogError("currentLevel is null! Cannot continue");
+            return;
+        }
         EnemySpawner.Instance.NextWave();
     }
 }
