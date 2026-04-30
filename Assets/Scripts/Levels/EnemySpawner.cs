@@ -17,6 +17,12 @@ public class EnemySpawner : MonoBehaviour
     private bool isSpawning = false;
     public int enemiesSpawnedThisWave = 0;
     public int enemiesKilledThisWave = 0;
+    public GameObject rewardScreen;
+    public GameObject gameOverScreen;
+    public GameObject victoryScreen;
+    public TMPro.TextMeshProUGUI waveStatsText;
+    public TMPro.TextMeshProUGUI waveNumberText;
+    private float waveStartTime;
 
     void Awake()
     {
@@ -27,10 +33,9 @@ public class EnemySpawner : MonoBehaviour
     {
         Debug.Log($"JSONLoader.Instance.levels count: {JSONLoader.Instance.levels?.Count}");
         Debug.Log($"level_selector: {level_selector}");
-
         CreateDifficultyButtons();
     }
-// func to make the buttons appear when func is called
+    // func to make the buttons appear when func is called
     void CreateDifficultyButtons()
     {
         foreach (Transform child in level_selector.transform)
@@ -40,12 +45,13 @@ public class EnemySpawner : MonoBehaviour
 
         List<LevelData> levels = JSONLoader.Instance.levels;
 
-        if (levels == null || levels.Count == 0) {
-           //  Debug.LogError("none of the levels loaded");
+        if (levels == null || levels.Count == 0)
+        {
+            //  Debug.LogError("none of the levels loaded");
             return;
         }
 
-        float startY = 130;
+        float startY = 60;
         float spacing = 60;
 
         for (int i = 0; i < levels.Count; i++)
@@ -56,8 +62,10 @@ public class EnemySpawner : MonoBehaviour
             MenuSelectorController controller = selector.GetComponent<MenuSelectorController>();
             controller.spawner = this;
             controller.SetLevel(levels[i].name);
-        } }
+        }
+    }
 
+    // Called when player selects a difficulty level
     public void StartLevel(string levelname)
     {
         currentLevel = JSONLoader.Instance.levels.Find(l => l.name == levelname);
@@ -73,24 +81,47 @@ public class EnemySpawner : MonoBehaviour
         StartCoroutine(SpawnWave());
     }
 
+    // Goes to the next wave or shows victory if all the waves are done
     public void NextWave()
     {
         if (currentLevel == null)
         {
-           // Debug.LogError("currentLevel is null");
+            // Debug.LogError("currentLevel is null");
             return;
         }
 
         if (currentLevel.waves > 0 && currentWave >= currentLevel.waves)
         {
             ShowVictory();
-            return; }
+            return;
+        }
 
         currentWave = currentWave + 1;
         StartCoroutine(SpawnWave());
     }
 
-    //
+    public void ReturnToMenu()
+    {
+        GameObject[] units = GameObject.FindGameObjectsWithTag("unit");
+        foreach (GameObject u in units)
+        {
+            if (u.GetComponent<EnemyController>() != null)
+            {
+                GameManager.Instance.RemoveEnemy(u);
+                Destroy(u);
+            }
+        }
+
+        gameOverScreen.SetActive(false);
+        victoryScreen.SetActive(false);
+        rewardScreen.SetActive(false);
+        currentLevel = null;
+        currentWave = 0;
+        level_selector.gameObject.SetActive(true);
+        GameManager.Instance.state = GameManager.GameState.GAMEOVER;
+    }
+
+    // manages the full wave lifecycle: countdown, spawning, and wave end detection
     IEnumerator SpawnWave()
     {
         if (isSpawning) yield break;
@@ -109,6 +140,13 @@ public class EnemySpawner : MonoBehaviour
 
         GameManager.Instance.state = GameManager.GameState.INWAVE;
 
+        if (currentLevel.waves > 0)
+            waveNumberText.text = $"Wave {currentWave} of {currentLevel.waves}";
+        else
+            waveNumberText.text = $"Wave {currentWave}";
+
+        waveStartTime = Time.time;
+
         //
         List<Coroutine> spawnCoroutines = new List<Coroutine>();
         foreach (SpawnData spawn in currentLevel.spawns)
@@ -125,7 +163,7 @@ public class EnemySpawner : MonoBehaviour
         Debug.Log($"All spawning done. Spawned: {enemiesSpawnedThisWave}, Killed so far: {enemiesKilledThisWave}");
 
         // all enemies dying
-        yield return new WaitUntil(() => enemiesKilledThisWave >= enemiesSpawnedThisWave);
+        yield return new WaitUntil(() => enemiesKilledThisWave >= enemiesSpawnedThisWave || IsPlayerDead());
 
         if (IsPlayerDead())
         {
@@ -139,6 +177,8 @@ public class EnemySpawner : MonoBehaviour
         isSpawning = false;
     }
 
+    // Spawns a specific enemy type using sequence and delay from levels.json
+    // Stats are calculated using RPN expressions
     IEnumerator SpawnEnemyType(SpawnData spawn)
     {
         Debug.Log($"Spawning {spawn.enemy} for wave {currentWave}");
@@ -166,7 +206,8 @@ public class EnemySpawner : MonoBehaviour
         //delay spawn as per our instructions :p
         int delay = spawn.delay;
         int[] sequence = spawn.sequence;
-        if (sequence == null || sequence.Length == 0) {
+        if (sequence == null || sequence.Length == 0)
+        {
             sequence = new int[] { 1 };
         }
 
@@ -174,7 +215,7 @@ public class EnemySpawner : MonoBehaviour
         int sequenceInd = 0;
         //while
 
-       //spawn total count
+        //spawn total count
         while (spawned < totalCount)
         {
             //group size from sequence array
@@ -215,6 +256,7 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    // Finds the correct spawn point based on location string
     SpawnPoint GetSpawnPoint(string location)
     {
         if (location == "random")
@@ -249,17 +291,26 @@ public class EnemySpawner : MonoBehaviour
 
     void ShowWaveComplete()
     {
-       // Debug.Log($"Wave {currentWave} done");
+        if (currentLevel.waves > 0 && currentWave >= currentLevel.waves)
+        {
+            ShowVictory();
+            return;
+        }
+        float timeTaken = Time.time - waveStartTime;
+        waveStatsText.text = $"Wave {currentWave} Complete!\nTime: {timeTaken:F1} seconds";
+        rewardScreen.SetActive(true);
     }
 
     void ShowVictory()
     {
+        victoryScreen.SetActive(true);
         Debug.Log("win");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
     void ShowGameOver()
     {
+        gameOverScreen.SetActive(true);
         Debug.Log("Game Over");
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
