@@ -1,5 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+
+// attempting to fix what the text displays
+public class WaveInfoDisplay : MonoBehaviour
+{
+    public TextMeshProUGUI waveText;
+
+    void Update()
+    {
+        if (GameManager.Instance.state == GameManager.GameState.WAVEEND)
+        {
+            waveText.text = $"Wave {EnemySpawner.Instance.currentWave} Complete!\nEnemies killed: {EnemySpawner.Instance.enemiesKilledThisWave}\nClick Continue";
+        }}}
 
 public class RewardScreenManager : MonoBehaviour
 {
@@ -13,6 +26,7 @@ public class RewardScreenManager : MonoBehaviour
 
     void Update()
     {
+        //
         if (GameManager.Instance == null) return;
         if (GameManager.Instance.state == GameManager.GameState.WAVEEND)
         {

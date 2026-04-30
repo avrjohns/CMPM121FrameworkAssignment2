@@ -12,13 +12,11 @@ public class EnemySpawner : MonoBehaviour
     public GameObject button;
     public GameObject enemy;
     public SpawnPoint[] SpawnPoints;
-
     public LevelData currentLevel;
-    private int currentWave = 0;
+    public int currentWave = 0;
     private bool isSpawning = false;
-
-    private int enemiesSpawnedThisWave = 0;
-    private int enemiesKilledThisWave = 0;
+    public int enemiesSpawnedThisWave = 0;
+    public int enemiesKilledThisWave = 0;
 
     void Awake()
     {
@@ -27,17 +25,14 @@ public class EnemySpawner : MonoBehaviour
 
     void Start()
     {
-        //
         Debug.Log($"JSONLoader.Instance.levels count: {JSONLoader.Instance.levels?.Count}");
         Debug.Log($"level_selector: {level_selector}");
-        // Debug.Log($"button prefab: {button}");
 
         CreateDifficultyButtons();
     }
-
+// func to make the buttons appear when func is called
     void CreateDifficultyButtons()
     {
-        // Debug.Log($"Creating buttons for {JSONLoader.Instance.levels?.Count} levels");
         foreach (Transform child in level_selector.transform)
         {
             Destroy(child.gameObject);
@@ -45,9 +40,8 @@ public class EnemySpawner : MonoBehaviour
 
         List<LevelData> levels = JSONLoader.Instance.levels;
 
-        if (levels == null || levels.Count == 0)
-        {
-            Debug.LogError("none of the levels loaded");
+        if (levels == null || levels.Count == 0) {
+           //  Debug.LogError("none of the levels loaded");
             return;
         }
 
@@ -59,22 +53,17 @@ public class EnemySpawner : MonoBehaviour
             GameObject selector = Instantiate(button, level_selector.transform);
             selector.transform.localPosition = new Vector3(0, startY - (i * spacing), 0);
 
-
             MenuSelectorController controller = selector.GetComponent<MenuSelectorController>();
-
             controller.spawner = this;
             controller.SetLevel(levels[i].name);
-        }
-    }
+        } }
 
     public void StartLevel(string levelname)
     {
         currentLevel = JSONLoader.Instance.levels.Find(l => l.name == levelname);
         if (currentLevel == null)
         {
-
             Debug.LogError($"Level '{levelname}' not found!");
-
             return;
         }
 
@@ -88,20 +77,20 @@ public class EnemySpawner : MonoBehaviour
     {
         if (currentLevel == null)
         {
-            Debug.LogError("NextWave() called but currentLevel is null?");
+           // Debug.LogError("currentLevel is null");
             return;
         }
 
         if (currentLevel.waves > 0 && currentWave >= currentLevel.waves)
         {
             ShowVictory();
-            return;
-        }
+            return; }
 
         currentWave = currentWave + 1;
         StartCoroutine(SpawnWave());
     }
 
+    //
     IEnumerator SpawnWave()
     {
         if (isSpawning) yield break;
@@ -120,15 +109,22 @@ public class EnemySpawner : MonoBehaviour
 
         GameManager.Instance.state = GameManager.GameState.INWAVE;
 
-
+        //
+        List<Coroutine> spawnCoroutines = new List<Coroutine>();
         foreach (SpawnData spawn in currentLevel.spawns)
         {
-            yield return StartCoroutine(SpawnEnemyType(spawn));
+            spawnCoroutines.Add(StartCoroutine(SpawnEnemyType(spawn)));
+        }
+
+        // Wait for all the spawning to finish
+        foreach (var coroutine in spawnCoroutines)
+        {
+            yield return coroutine;
         }
 
         Debug.Log($"All spawning done. Spawned: {enemiesSpawnedThisWave}, Killed so far: {enemiesKilledThisWave}");
 
-
+        // all enemies dying
         yield return new WaitUntil(() => enemiesKilledThisWave >= enemiesSpawnedThisWave);
 
         if (IsPlayerDead())
@@ -145,7 +141,6 @@ public class EnemySpawner : MonoBehaviour
 
     IEnumerator SpawnEnemyType(SpawnData spawn)
     {
-
         Debug.Log($"Spawning {spawn.enemy} for wave {currentWave}");
 
         EnemyData baseEnemy = JSONLoader.Instance.enemies.Find(e => e.name == spawn.enemy);
@@ -154,7 +149,7 @@ public class EnemySpawner : MonoBehaviour
             Debug.LogError($"Enemy '{spawn.enemy}' not found!");
             yield break;
         }
-
+        // create vars for waves and enemies
         int totalCount = RPNEvaluatorWrapper.Evaluate(spawn.count,
             new Dictionary<string, int> { { "base", 0 }, { "wave", currentWave } });
 
@@ -167,20 +162,22 @@ public class EnemySpawner : MonoBehaviour
         int enemyDamage = RPNEvaluatorWrapper.Evaluate(spawn.damage,
             new Dictionary<string, int> { { "base", baseEnemy.damage }, { "wave", currentWave } });
 
+        Debug.Log($"Wave {currentWave} | {spawn.enemy}: count={totalCount}, hp={enemyHP}, speed={enemySpeed}, damage={enemyDamage}");
+        //delay spawn as per our instructions :p
         int delay = spawn.delay;
         int[] sequence = spawn.sequence;
-
-        if (sequence == null || sequence.Length == 0)
-        {
+        if (sequence == null || sequence.Length == 0) {
             sequence = new int[] { 1 };
         }
 
         int spawned = 0;
-
         int sequenceInd = 0;
+        //while
 
+       //spawn total count
         while (spawned < totalCount)
         {
+            //group size from sequence array
             int collectionSize = sequence[sequenceInd % sequence.Length];
             int actualcollectionSize = Mathf.Min(collectionSize, totalCount - spawned);
 
@@ -188,6 +185,7 @@ public class EnemySpawner : MonoBehaviour
 
             for (int i = 0; i < actualcollectionSize; i++)
             {
+                //so enemies do not stack
                 Vector2 offset = Random.insideUnitCircle * 1.8f;
                 Vector3 position = spawnPoint.transform.position + new Vector3(offset.x, offset.y, 0);
 
@@ -197,20 +195,23 @@ public class EnemySpawner : MonoBehaviour
                     GameManager.Instance.enemySpriteManager.Get(baseEnemy.sprite);
 
                 EnemyController en = newEnemy.GetComponent<EnemyController>();
+                //setting tha hp and all from rpn eval exps
                 en.hp = new Hittable(enemyHP, Hittable.Team.MONSTERS, newEnemy);
                 en.speed = enemySpeed;
                 en.attackDamage = enemyDamage;
 
+                //track all counters
                 GameManager.Instance.AddEnemy(newEnemy);
-                enemiesSpawnedThisWave++;
-                spawned++;
+                enemiesSpawnedThisWave = enemiesSpawnedThisWave + 1;
+                spawned = spawned + 1;
             }
 
             sequenceInd = sequenceInd + 1;
 
-
             if (spawned < totalCount)
-            { yield return new WaitForSeconds(delay); }
+            {
+                yield return new WaitForSeconds(delay);
+            }
         }
     }
 
@@ -224,15 +225,12 @@ public class EnemySpawner : MonoBehaviour
         if (location.StartsWith("random "))
         {
             string type = location.Substring(7);
-
+            //spawn set in unity
             SpawnPoint.SpawnName spawnName = SpawnPoint.SpawnName.RED;
-
             if (type == "green") spawnName = SpawnPoint.SpawnName.GREEN;
-
             else if (type == "bone") spawnName = SpawnPoint.SpawnName.BONE;
 
             SpawnPoint[] matching = System.Array.FindAll(SpawnPoints, sp => sp.kind == spawnName);
-
             if (matching.Length > 0)
             {
                 return matching[Random.Range(0, matching.Length)];
@@ -251,7 +249,7 @@ public class EnemySpawner : MonoBehaviour
 
     void ShowWaveComplete()
     {
-        Debug.Log($"Wave {currentWave} done");
+       // Debug.Log($"Wave {currentWave} done");
     }
 
     void ShowVictory()
