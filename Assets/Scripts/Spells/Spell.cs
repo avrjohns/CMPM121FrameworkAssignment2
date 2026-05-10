@@ -3,11 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-public class Spell 
+//public class Spell 
+public abstract class Spell
 {
     public float last_cast;
     public SpellCaster owner;
     public Hittable.Team team;
+    protected string baseName = "Unknown Spell";
+    protected string baseDescription = "";
+    protected int baseIcon = 0;
+    protected float baseDamage = 0;
+    protected Damage.Type damageType = Damage.Type.ARCANE;
+    protected int baseManaCost = 0;
+    protected float baseCooldown = 0;
+    protected string baseProjectileTrajectory = "straight";
+    protected float baseProjectileSpeed = 10f;
+    protected int baseProjectileSprite = 0;
+    protected float? baseProjectileLifetime = null;
 
     public Spell(SpellCaster owner)
     {
