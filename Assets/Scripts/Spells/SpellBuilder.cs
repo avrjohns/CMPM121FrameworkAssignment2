@@ -113,7 +113,7 @@ public class SpellBuilder
         switch (key)
         {
             case "damage_amp": return new DamageAmp(inner, owner, modData);
-            //case "speed_amp": return new SpeedAmp(inner, owner, modData);
+            case "speed_amp": return new SpeedAmp(inner, owner, modData);
            // case "doubler": return new Doubler(inner, owner, modData);
            // case "splitter": return new Splitter(inner, owner, modData);
            // case "chaos": return new Chaos(inner, owner, modData);
