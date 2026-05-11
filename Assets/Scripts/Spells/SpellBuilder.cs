@@ -22,7 +22,8 @@ public class SpellBuilder
         rng = new System.Random();
 
         // from spells.json
-        baseSpellKeys = new List<string> { "arcane_bolt", "magic_missile", "arcane_blast", "arcane_spray" };
+        //baseSpellKeys = new List<string> { "arcane_bolt", "magic_missile", "arcane_blast", "arcane_spray" };
+        baseSpellKeys = new List<string> { "arcane_bolt" };
 
         // from spells.json
         modifierKeys = new List<string> {
@@ -63,9 +64,9 @@ public class SpellBuilder
         switch (key)
         {
             case "arcane_bolt": return new ArcaneBolt(owner, spellData);
-            case "magic_missile": return new MagicMissile(owner, spellData);
-            case "arcane_blast": return new ArcaneBlast(owner, spellData);
-            case "arcane_spray": return new ArcaneSpray(owner, spellData);
+            //case "magic_missile": return new MagicMissile(owner, spellData);
+            //case "arcane_blast": return new ArcaneBlast(owner, spellData);
+            //case "arcane_spray": return new ArcaneSpray(owner, spellData);
             default:
                 Debug.LogWarning($"[SpellBuilder] Unknown base spell '{key}', using ArcaneBolt");
                 return new ArcaneBolt(owner, spellData);

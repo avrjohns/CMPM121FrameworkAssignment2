@@ -46,10 +46,10 @@ public abstract class Spell
 
     /// ModifierSpells override to aggregate inner + their own.
 
-    //public virtual SpellProperties GetProperties()
-    //{
-    //    return new SpellProperties();
-    //}
+    public virtual SpellProperties GetProperties()
+    {
+        return new SpellProperties();
+    }
 
     /// load spell specific attributes from JSON.
     public virtual void SetAttributes(JObject attributes) { }
