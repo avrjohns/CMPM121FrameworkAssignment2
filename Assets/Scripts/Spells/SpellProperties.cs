@@ -15,7 +15,7 @@ public class SpellProperties
 
 
     public string projectileTrajectory = null;
-
+    //public string projectileTrajectoryName = null;
     public int? projectileSprite = null;
 
     public float? projectileLifetime = null;

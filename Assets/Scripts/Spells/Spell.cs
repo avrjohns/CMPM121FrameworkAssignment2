@@ -26,50 +26,50 @@ public abstract class Spell
         this.owner = owner;
     }
 
-    public string GetName()
+    public virtual string GetName() => baseName;
+    public virtual string GetDescription() => baseDescription;
+    public virtual int GetIcon() => baseIcon;
+    public virtual float GetDamage() => baseDamage;
+    public virtual int GetManaCost() => baseManaCost;
+    public virtual float GetCooldown() => baseCooldown;
+    public virtual string GetProjectileTrajectory() => baseProjectileTrajectory;
+    public virtual float GetProjectileSpeed() => baseProjectileSpeed;
+    public virtual int GetProjectileSprite() => baseProjectileSprite;
+    public virtual float? GetProjectileLifetime() => baseProjectileLifetime;
+    public virtual Damage.Type GetDamageType() => damageType;
+
+    public bool IsReady() => (last_cast + GetCooldown() < Time.time);
+
+    /// cast method spells implement projectile creation
+    public abstract IEnumerator Cast(Vector3 where, Vector3 target, Hittable.Team team,
+                                     float spellPower, int waveNumber);
+
+    /// ModifierSpells override to aggregate inner + their own.
+
+    public virtual SpellProperties GetProperties()
     {
-        return "Bolt";
+        return new SpellProperties();
     }
 
-    public int GetManaCost()
-    {
-        return 10;
-    }
+    /// load spell specific attributes from JSON.
+    public virtual void SetAttributes(JObject attributes) { }
 
-    public int GetDamage()
+    /// evaluate RPN expressions with power and wave variables.
+    protected float EvalRPN(string expression, float spellPower, int waveNumber)
     {
-        return 100;
-    }
+        if (string.IsNullOrEmpty(expression)) return 0;
 
-    public float GetCooldown()
-    {
-        return 0.75f;
-    }
-
-    public virtual int GetIcon()
-    {
-        return 0;
-    }
-
-    public bool IsReady()
-    {
-        return (last_cast + GetCooldown() < Time.time);
-    }
-
-    public virtual IEnumerator Cast(Vector3 where, Vector3 target, Hittable.Team team)
-    {
-        this.team = team;
-        GameManager.Instance.projectileManager.CreateProjectile(0, "straight", where, target - where, 15f, OnHit);
-        yield return new WaitForEndOfFrame();
-    }
-
-    void OnHit(Hittable other, Vector3 impact)
-    {
-        if (other.team != team)
+        var vars = new Dictionary<string, float>
         {
-            other.Damage(new Damage(GetDamage(), Damage.Type.ARCANE));
-        }
+            { "power", spellPower },
+            { "wave", waveNumber }
+        };
+        return RPNEvaluatorWrapper.Evaluatef(expression, vars);
+    }
 
+    protected int EvalRPNInt(string expression, float spellPower, int waveNumber)
+    {
+        return Mathf.RoundToInt(EvalRPN(expression, spellPower, waveNumber));
     }
 
 }
