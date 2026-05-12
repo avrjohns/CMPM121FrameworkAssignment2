@@ -1,10 +1,5 @@
-using UnityEngine;
 using System.Collections.Generic;
 
-/// container for all modifiable
-/// 
-/// /// for all spell props
-/// base spells create empty one and ModifierSpells add to it.
 public class SpellProperties
 {
     public List<ValueModifier> damageModifiers = new List<ValueModifier>();
@@ -13,21 +8,23 @@ public class SpellProperties
     public List<ValueModifier> speedModifiers = new List<ValueModifier>();
     public List<ValueModifier> lifetimeModifiers = new List<ValueModifier>();
 
-
     public string projectileTrajectory = null;
-    //public string projectileTrajectoryName = null;
     public int? projectileSprite = null;
-
     public float? projectileLifetime = null;
 
-    // behavior flags for modifiers
+    // VAMPIRIC
+    public bool isVampiric = false;
+    public float lifeStealPercent = 0f;
+
+    //PIERCING
     public bool isPiercing = false;
     public int pierceCount = 0;
-    public bool leavesTrail = false;
-    public bool isBouncing = false;
-    public int bounceCount = 0;
+    public float damageReductionPerPierce = 0.75f;
 
-    // apply modifier chains
+    // BIG GUY
+    public bool isBigGuy = false;
+    public float splashMultiplier = 0.5f;
+
     public float GetDamage(float baseDamage) => ValueModifier.Apply(damageModifiers, baseDamage);
     public int GetManaCost(int baseCost) => ValueModifier.Apply(manaCostModifiers, baseCost);
     public float GetCooldown(float baseCooldown) => ValueModifier.Apply(cooldownModifiers, baseCooldown);
