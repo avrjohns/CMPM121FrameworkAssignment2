@@ -27,7 +27,7 @@ public class SpellBuilder
 
         // from spells.json
         modifierKeys = new List<string> {
-                "arcane_bolt", "magic_missile", "arcane_blast", "arcane_spray",
+                "damage_amp", "speed_amp", "doubler", "splitter", "chaos", "homing", "arcane_bolt", "magic_missile", "arcane_blast", "arcane_spray",
     "vampire_breath"
         };
     }
@@ -118,9 +118,9 @@ public class SpellBuilder
             case "damage_amp": return new DamageAmp(inner, owner, modData);
             case "speed_amp": return new SpeedAmp(inner, owner, modData);
             case "doubler": return new Doubler(inner, owner, modData);
-           // case "splitter": return new Splitter(inner, owner, modData);
-           // case "chaos": return new Chaos(inner, owner, modData);
-            //case "homing": return new Homing(inner, owner, modData);
+            case "splitter": return new Splitter(inner, owner, modData);
+            case "chaos": return new Chaos(inner, owner, modData);
+            case "homing": return new Homing(inner, owner, modData);
             default:
                 Debug.LogWarning($"[SpellBuilder] Unknown modifier '{key}'");
                 return inner;
