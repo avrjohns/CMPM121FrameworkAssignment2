@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
 
     public Unit unit;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // start is called once before the first Update after the mono is created
     void Start()
     {
         unit = GetComponent<Unit>();
@@ -27,20 +27,20 @@ public class PlayerController : MonoBehaviour
 
     public void StartLevel()
     {
-        spellcaster = new SpellCaster(125, 8, Hittable.Team.PLAYER);
+        spellcaster = new SpellCaster(125, 8, Hittable.Team.PLAYER, hp);
         StartCoroutine(spellcaster.ManaRegeneration());
-        
+
         hp = new Hittable(100, Hittable.Team.PLAYER, gameObject);
         hp.OnDeath += Die;
         hp.team = Hittable.Team.PLAYER;
 
-        // tell UI elements what to show
         healthui.SetHealth(hp);
         manaui.SetSpellCaster(spellcaster);
-        spellui.SetSpell(spellcaster.spells[0]);
+
+        if (spellui != null && spellcaster.spells.Count > 0)
+            spellui.SetSpell(spellcaster.spells[0]);
     }
 
-    // Update is called once per frame
     void Update()
     {
         

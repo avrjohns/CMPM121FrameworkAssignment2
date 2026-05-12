@@ -2,17 +2,19 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-// player spell casting, mana, and spells
-
 public class SpellCaster
 {
     public int mana;
     public int max_mana;
     public int mana_reg;
     public Hittable.Team team;
+
     public List<Spell> spells = new List<Spell>();
     public int selectedSpellIndex = 0;
+
     public float spellPower = 10f;
+
+    private Hittable ownerHittable;
 
     public IEnumerator ManaRegeneration()
     {
@@ -24,13 +26,17 @@ public class SpellCaster
         }
     }
 
-    public SpellCaster(int mana, int mana_reg, Hittable.Team team)
+    public SpellCaster(int mana, int mana_reg, Hittable.Team team, Hittable ownerHittable = null)
     {
         this.mana = mana;
         this.max_mana = mana;
         this.mana_reg = mana_reg;
         this.team = team;
-        spells.Add(new SpellBuilder().Build(this));
+        this.ownerHittable = ownerHittable;
+
+        Spell starter = new SpellBuilder().Build(this);
+        starter.ownerHittable = ownerHittable;
+        spells.Add(starter);
     }
 
     public Spell GetSelectedSpell()
@@ -45,25 +51,45 @@ public class SpellCaster
         Spell spell = GetSelectedSpell();
         if (spell == null) yield break;
 
-        if (mana >= spell.GetManaCost() && spell.IsReady())
+        if (spell is VampireBreath vb)
         {
-            mana -= spell.GetManaCost();
-            int wave = 1;
-            if (EnemySpawner.Instance != null)
-                wave = EnemySpawner.Instance.currentWave;
-
-            yield return spell.Cast(where, target, team, spellPower, wave);
+            if (!vb.CanAfford())
+            {
+                Debug.Log("[SpellCaster] Not enough HP for Vampire Breath!");
+                yield break;
+            }
         }
-        yield break;
+        else
+        {
+            if (mana < spell.GetManaCost())
+            {
+                Debug.Log("[SpellCaster] Not enough mana!");
+                yield break;
+            }
+            mana -= spell.GetManaCost();
+        }
+
+        if (!spell.IsReady())
+        {
+            Debug.Log("[SpellCaster] Spell on cooldown!");
+            yield break;
+        }
+
+        int wave = 1;
+        if (EnemySpawner.Instance != null)
+            wave = EnemySpawner.Instance.currentWave;
+
+        yield return spell.Cast(where, target, team, spellPower, wave);
     }
 
     public void AddSpell(Spell spell)
     {
         if (spells.Count >= 4)
         {
-            Debug.Log("[SpellCaster] max 4 spells equipped");
+            Debug.Log("[SpellCaster] Cannot add spell: maximum 4 spells equipped");
             return;
         }
+        spell.ownerHittable = ownerHittable;
         spells.Add(spell);
     }
 
@@ -79,6 +105,7 @@ public class SpellCaster
 
     public void ReplaceSpell(int index, Spell spell)
     {
+        spell.ownerHittable = ownerHittable;
         if (index >= 0 && index < spells.Count)
             spells[index] = spell;
         else if (spells.Count < 4)

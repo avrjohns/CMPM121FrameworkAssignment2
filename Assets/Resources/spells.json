@@ -76,6 +76,19 @@
        "damage_multiplier": "0.75",
        "mana_adder": "10",
        "projectile_trajectory": "homing"
-   }
+   },
+   "vampire_breath": {
+    "name": "Vampire Breath",
+    "description": "A torrent of crimson energy that feeds on your life force.",
+    "icon": 99,
+    "damage": {"amount": "35 power 3 / +", "type": "dark"},
+    "hp_cost_base": "10",
+    "hp_cost_percent": "0.08",
+    "life_steal": "0.4",
+    "damage_per_hp": "2.5",
+    "mana_cost": "0",
+    "cooldown": "2.5",
+    "projectile": {"trajectory": "straight", "speed": "7", "sprite": 99}
+}
 
 }
