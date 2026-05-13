@@ -139,6 +139,8 @@ public class EnemySpawner : MonoBehaviour
         }
 
         GameManager.Instance.state = GameManager.GameState.INWAVE;
+        // scale player stats with wave number
+        UpdatePlayerStats();
 
         if (currentLevel.waves > 0)
             waveNumberText.text = $"Wave {currentWave} of {currentLevel.waves}";
@@ -319,5 +321,31 @@ public class EnemySpawner : MonoBehaviour
     {
         enemiesKilledThisWave++;
         Debug.Log("Enemy died");
+    }
+
+    void UpdatePlayerStats()
+    {
+        PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        var vars = new Dictionary<string, float> { { "wave", currentWave } };
+
+        // update max hp preserving percentage
+        int newMaxHP = Mathf.RoundToInt(RPNEvaluatorWrapper.Evaluatef("95 wave 5 * +", vars));
+        pc.hp.SetMaxHP(newMaxHP);
+
+        // update mana
+        int newMana = Mathf.RoundToInt(RPNEvaluatorWrapper.Evaluatef("90 wave 10 * +", vars));
+        pc.spellcaster.max_mana = newMana;
+        pc.spellcaster.mana = Mathf.Min(pc.spellcaster.mana, newMana);
+
+        // update mana regen
+        pc.spellcaster.mana_reg = Mathf.RoundToInt(RPNEvaluatorWrapper.Evaluatef("10 wave +", vars));
+
+        // update spell power
+        pc.spellcaster.spellPower = RPNEvaluatorWrapper.Evaluatef("wave 10 *", vars);
+
+        // update speed
+        pc.speed = 5;
     }
 }
