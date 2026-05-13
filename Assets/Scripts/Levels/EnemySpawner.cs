@@ -361,13 +361,30 @@ public class EnemySpawner : MonoBehaviour
 
     public void TakeSpell()
     {
-        if (pendingRewardSpell == null) return;
+        if (pendingRewardSpell == null)
+        {
+            Debug.Log("pendingRewardSpell is null!");
+            return;
+        }
+
         PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
         pc.spellcaster.AddSpell(pendingRewardSpell);
+        Debug.Log($"Spell added! Total spells: {pc.spellcaster.spells.Count}");
 
-        // update button text to confirm
+        SpellUI[] spellSlots = FindObjectsOfType<SpellUI>();
+        Debug.Log($"Found {spellSlots.Length} spell slots");
+
+        int newIndex = pc.spellcaster.spells.Count - 1;
+        Debug.Log($"New spell index: {newIndex}");
+
+        if (newIndex < spellSlots.Length)
+        {
+            spellSlots[newIndex].gameObject.SetActive(true);
+            spellSlots[newIndex].SetSpell(pendingRewardSpell);
+            Debug.Log($"Set spell on slot {newIndex}");
+        }
+
         takeSpellButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Spell Added!";
-
         pendingRewardSpell = null;
     }
 }
