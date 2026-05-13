@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
 
     public Unit unit;
 
-    // start is called once before the first Update after the mono is created
+    //start is called once before the first Update after the mono is created
     void Start()
     {
         unit = GetComponent<Unit>();

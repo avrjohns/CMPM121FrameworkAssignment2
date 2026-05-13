@@ -364,7 +364,7 @@ public class EnemySpawner : MonoBehaviour
     {
         if (pendingRewardSpell == null)
         {
-            Debug.Log("pendingRewardSpell is null!");
+            Debug.Log("pendingRewardSpell is null");
             return;
         }
 
@@ -380,5 +380,17 @@ public class EnemySpawner : MonoBehaviour
 
         takeSpellButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Spell Added!";
         pendingRewardSpell = null;
+    }
+
+    public void DropSpell(int index)
+    {
+        PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
+        pc.spellcaster.RemoveSpell(index);
+
+        //hide that spell slot
+        if (index < spellUISlots.Length)
+        {
+            spellUISlots[index].gameObject.SetActive(false);
+        }
     }
 }
