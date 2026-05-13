@@ -26,6 +26,7 @@ public class EnemySpawner : MonoBehaviour
     public TMPro.TextMeshProUGUI spellRewardText;
     public UnityEngine.UI.Button takeSpellButton;
     private Spell pendingRewardSpell;
+    public SpellUI[] spellUISlots;
 
 
     void Awake()
@@ -369,19 +370,12 @@ public class EnemySpawner : MonoBehaviour
 
         PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
         pc.spellcaster.AddSpell(pendingRewardSpell);
-        Debug.Log($"Spell added! Total spells: {pc.spellcaster.spells.Count}");
-
-        SpellUI[] spellSlots = FindObjectsOfType<SpellUI>();
-        Debug.Log($"Found {spellSlots.Length} spell slots");
 
         int newIndex = pc.spellcaster.spells.Count - 1;
-        Debug.Log($"New spell index: {newIndex}");
-
-        if (newIndex < spellSlots.Length)
+        if (newIndex < spellUISlots.Length)
         {
-            spellSlots[newIndex].gameObject.SetActive(true);
-            spellSlots[newIndex].SetSpell(pendingRewardSpell);
-            Debug.Log($"Set spell on slot {newIndex}");
+            spellUISlots[newIndex].gameObject.SetActive(true);
+            spellUISlots[newIndex].SetSpell(pendingRewardSpell);
         }
 
         takeSpellButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Spell Added!";
