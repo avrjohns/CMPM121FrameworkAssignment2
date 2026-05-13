@@ -23,6 +23,10 @@ public class EnemySpawner : MonoBehaviour
     public TMPro.TextMeshProUGUI waveStatsText;
     public TMPro.TextMeshProUGUI waveNumberText;
     private float waveStartTime;
+    public TMPro.TextMeshProUGUI spellRewardText;
+    public UnityEngine.UI.Button takeSpellButton;
+    private Spell pendingRewardSpell;
+
 
     void Awake()
     {
@@ -35,7 +39,7 @@ public class EnemySpawner : MonoBehaviour
         Debug.Log($"level_selector: {level_selector}");
         CreateDifficultyButtons();
     }
-    // func to make the buttons appear when func is called
+    //func to make the buttons appear when func is called
     void CreateDifficultyButtons()
     {
         foreach (Transform child in level_selector.transform)
@@ -47,7 +51,7 @@ public class EnemySpawner : MonoBehaviour
 
         if (levels == null || levels.Count == 0)
         {
-            //  Debug.LogError("none of the levels loaded");
+            //Debug.LogError("none of the levels loaded");
             return;
         }
 
@@ -65,7 +69,7 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    // Called when player selects a difficulty level
+    //Called when player selects a difficulty level
     public void StartLevel(string levelname)
     {
         currentLevel = JSONLoader.Instance.levels.Find(l => l.name == levelname);
@@ -81,12 +85,12 @@ public class EnemySpawner : MonoBehaviour
         StartCoroutine(SpawnWave());
     }
 
-    // Goes to the next wave or shows victory if all the waves are done
+    //Goes to the next wave or shows victory if all the waves are done
     public void NextWave()
     {
         if (currentLevel == null)
         {
-            // Debug.LogError("currentLevel is null");
+            //Debug.LogError("currentLevel is null");
             return;
         }
 
@@ -121,7 +125,7 @@ public class EnemySpawner : MonoBehaviour
         GameManager.Instance.state = GameManager.GameState.GAMEOVER;
     }
 
-    // manages the full wave lifecycle: countdown, spawning, and wave end detection
+    //manages the full wave lifecycle: countdown, spawning, and wave end detection
     IEnumerator SpawnWave()
     {
         if (isSpawning) yield break;
@@ -139,7 +143,7 @@ public class EnemySpawner : MonoBehaviour
         }
 
         GameManager.Instance.state = GameManager.GameState.INWAVE;
-        // scale player stats with wave number
+        //scale player stats with wave number
         UpdatePlayerStats();
 
         if (currentLevel.waves > 0)
@@ -149,14 +153,13 @@ public class EnemySpawner : MonoBehaviour
 
         waveStartTime = Time.time;
 
-        //
         List<Coroutine> spawnCoroutines = new List<Coroutine>();
         foreach (SpawnData spawn in currentLevel.spawns)
         {
             spawnCoroutines.Add(StartCoroutine(SpawnEnemyType(spawn)));
         }
 
-        // Wait for all the spawning to finish
+        //Wait for all the spawning to finish
         foreach (var coroutine in spawnCoroutines)
         {
             yield return coroutine;
@@ -164,7 +167,7 @@ public class EnemySpawner : MonoBehaviour
 
         Debug.Log($"All spawning done. Spawned: {enemiesSpawnedThisWave}, Killed so far: {enemiesKilledThisWave}");
 
-        // all enemies dying
+        //all enemies dying
         yield return new WaitUntil(() => enemiesKilledThisWave >= enemiesSpawnedThisWave || IsPlayerDead());
 
         if (IsPlayerDead())
@@ -179,8 +182,8 @@ public class EnemySpawner : MonoBehaviour
         isSpawning = false;
     }
 
-    // Spawns a specific enemy type using sequence and delay from levels.json
-    // Stats are calculated using RPN expressions
+    //Spawns a specific enemy type using sequence and delay from levels.json
+    //Stats are calculated using RPN expressions
     IEnumerator SpawnEnemyType(SpawnData spawn)
     {
         Debug.Log($"Spawning {spawn.enemy} for wave {currentWave}");
@@ -191,7 +194,7 @@ public class EnemySpawner : MonoBehaviour
             Debug.LogError($"Enemy '{spawn.enemy}' not found!");
             yield break;
         }
-        // create vars for waves and enemies
+        //create vars for waves and enemies
         int totalCount = RPNEvaluatorWrapper.Evaluate(spawn.count,
             new Dictionary<string, int> { { "base", 0 }, { "wave", currentWave } });
 
@@ -215,7 +218,6 @@ public class EnemySpawner : MonoBehaviour
 
         int spawned = 0;
         int sequenceInd = 0;
-        //while
 
         //spawn total count
         while (spawned < totalCount)
@@ -258,7 +260,7 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    // Finds the correct spawn point based on location string
+    //Finds the correct spawn point based on location string
     SpawnPoint GetSpawnPoint(string location)
     {
         if (location == "random")
@@ -300,6 +302,14 @@ public class EnemySpawner : MonoBehaviour
         }
         float timeTaken = Time.time - waveStartTime;
         waveStatsText.text = $"Wave {currentWave} Complete!\nTime: {timeTaken:F1} seconds";
+
+        //generate reward spell
+        PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
+        SpellBuilder builder = new SpellBuilder();
+        pendingRewardSpell = builder.GenerateRewardSpell(pc.spellcaster, currentWave);
+        spellRewardText.text = $"Spell Reward:\n{pendingRewardSpell.GetName()}";
+        takeSpellButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Take Spell";
+
         rewardScreen.SetActive(true);
     }
 
@@ -330,22 +340,34 @@ public class EnemySpawner : MonoBehaviour
 
         var vars = new Dictionary<string, float> { { "wave", currentWave } };
 
-        // update max hp preserving percentage
+        //update max hp preserving percentage
         int newMaxHP = Mathf.RoundToInt(RPNEvaluatorWrapper.Evaluatef("95 wave 5 * +", vars));
         pc.hp.SetMaxHP(newMaxHP);
 
-        // update mana
+        //update mana
         int newMana = Mathf.RoundToInt(RPNEvaluatorWrapper.Evaluatef("90 wave 10 * +", vars));
         pc.spellcaster.max_mana = newMana;
         pc.spellcaster.mana = Mathf.Min(pc.spellcaster.mana, newMana);
 
-        // update mana regen
+        //update mana regen
         pc.spellcaster.mana_reg = Mathf.RoundToInt(RPNEvaluatorWrapper.Evaluatef("10 wave +", vars));
 
-        // update spell power
+        //update spell power
         pc.spellcaster.spellPower = RPNEvaluatorWrapper.Evaluatef("wave 10 *", vars);
 
-        // update speed
+        //update speed
         pc.speed = 5;
+    }
+
+    public void TakeSpell()
+    {
+        if (pendingRewardSpell == null) return;
+        PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
+        pc.spellcaster.AddSpell(pendingRewardSpell);
+
+        // update button text to confirm
+        takeSpellButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Spell Added!";
+
+        pendingRewardSpell = null;
     }
 }
