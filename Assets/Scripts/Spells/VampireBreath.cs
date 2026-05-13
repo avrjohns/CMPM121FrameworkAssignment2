@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Newtonsoft.Json.Linq;
 
-//Blood magic that consumes caster HP instead of mana
+// Blood magic that consumes caster HP instead of mana
 public class VampireBreath : Spell
 {
     float hpCostBase = 10f;
@@ -10,18 +10,21 @@ public class VampireBreath : Spell
     float lifeStealPercent = 0.4f;
     float damagePerHPCost = 2.5f;
 
+    // Store props so OnHit can access them
+    private SpellProperties currentProps;
+
     public VampireBreath(SpellCaster owner, JObject data) : base(owner)
     {
         baseName = "Vampire Breath";
         baseDescription = "A torrent of crimson energy that feeds on your life force. Costs health instead of mana.";
-        baseIcon = 99;
+        baseIcon = 0;  // FIXED: Use valid icon index (0 is guaranteed to exist)
         baseDamage = 35;
         damageType = Damage.Type.DARK;
         baseManaCost = 0;
         baseCooldown = 2.5f;
         baseProjectileTrajectory = "straight";
         baseProjectileSpeed = 7f;
-        baseProjectileSprite = 99;
+        baseProjectileSprite = 0;  // FIXED: Use valid sprite index
 
         if (data != null)
         {
@@ -76,6 +79,7 @@ public class VampireBreath : Spell
         float totalDamage = baseDmg + bonusDamage;
 
         var props = GetProperties();
+        currentProps = props;  // Store for OnHit access
         float finalDamage = props.GetDamage(totalDamage);
         float finalSpeed = props.GetSpeed(GetProjectileSpeed());
         string trajectory = props.projectileTrajectory ?? GetProjectileTrajectory();
@@ -83,9 +87,10 @@ public class VampireBreath : Spell
 
         FlashCasterRed();
 
+        // FIXED: Use 2-parameter callback signature that CreateProjectile expects
         GameManager.Instance.projectileManager.CreateProjectile(
             sprite, trajectory, where, target - where, finalSpeed,
-            (hittable, pos) => OnHit(hittable, pos, finalDamage, hpCost));
+            OnHit);  // Pass method directly, not lambda with extra params
 
         yield return new WaitForEndOfFrame();
     }
@@ -97,15 +102,27 @@ public class VampireBreath : Spell
         return Mathf.RoundToInt(cost);
     }
 
-    void OnHit(Hittable other, Vector3 impact, float damage, int hpSpent)
+    // FIXED: 2-parameter signature to match Action<Hittable, Vector3>
+    void OnHit(Hittable other, Vector3 impact)
     {
         if (other.team != team)
         {
+            // Calculate damage using stored props or base
+            float damage = currentProps != null ? currentProps.GetDamage(baseDamage) : baseDamage;
             int dmgAmount = Mathf.RoundToInt(damage);
             other.Damage(new Damage(dmgAmount, damageType));
 
+            // Life steal from VampireBreath base (not Vampiric modifier)
             int heal = Mathf.RoundToInt(damage * lifeStealPercent);
             ApplyHeal(heal);
+
+            // VAMPIRIC MODIFIER: Additional heal if present
+            if (currentProps != null && currentProps.isVampiric)
+            {
+                int vampHeal = Mathf.RoundToInt(damage * currentProps.lifeStealPercent);
+                ApplyHeal(vampHeal);
+                Debug.Log($"[Vampiric] Extra heal: {vampHeal} HP");
+            }
 
             SpawnBloodEffect(impact);
         }
@@ -135,6 +152,6 @@ public class VampireBreath : Spell
 
     void SpawnBloodEffect(Vector3 pos)
     {
-        Debug.Log($"[VampireBreath] blood effect at {pos}");
+        Debug.Log($"[VampireBreath] Blood effect at {pos}");
     }
 }

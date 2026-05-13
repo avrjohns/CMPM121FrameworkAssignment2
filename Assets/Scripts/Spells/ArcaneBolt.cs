@@ -5,6 +5,9 @@ using Newtonsoft.Json.Linq;
 
 public class ArcaneBolt : Spell
 {
+    // Store props at cast time so OnHit can access them
+    private SpellProperties currentProps;
+
     public ArcaneBolt(SpellCaster owner, JObject data) : base(owner)
     {
         baseName = data["name"]?.ToString() ?? "Arcane Bolt";
@@ -43,46 +46,49 @@ public class ArcaneBolt : Spell
         int sprite = props.projectileSprite ?? GetProjectileSprite();
         float? lifetime = props.projectileLifetime ?? GetProjectileLifetime();
 
-        // Store props for OnHit to access
-        SpellProperties capturedProps = props;
+        // STORE props so OnHit can access them
+        currentProps = props;
 
         if (lifetime.HasValue)
         {
             GameManager.Instance.projectileManager.CreateProjectile(
                 sprite, trajectory, where, target - where, finalSpeed,
-                (hittable, pos) => OnHit(hittable, pos, finalDamage, capturedProps),
+                OnHit,
                 lifetime.Value);
         }
         else
         {
             GameManager.Instance.projectileManager.CreateProjectile(
                 sprite, trajectory, where, target - where, finalSpeed,
-                (hittable, pos) => OnHit(hittable, pos, finalDamage, capturedProps));
+                OnHit);
         }
 
         yield return new WaitForEndOfFrame();
     }
 
-    void OnHit(Hittable other, Vector3 impact, float damage, SpellProperties props)
+    // This matches the Action<Hittable, Vector3> signature that CreateProjectile expects
+    void OnHit(Hittable other, Vector3 impact)
     {
         if (other.team != team)
         {
+            // Get damage from currentProps or base
+            float damage = currentProps != null ? currentProps.GetDamage(baseDamage) : baseDamage;
             int dmgAmount = Mathf.RoundToInt(damage);
             other.Damage(new Damage(dmgAmount, damageType));
 
             // VAMPIRIC: Heal caster
-            if (props.isVampiric && ownerHittable != null)
+            if (currentProps != null && currentProps.isVampiric && ownerHittable != null)
             {
-                int heal = Mathf.RoundToInt(damage * props.lifeStealPercent);
+                int heal = Mathf.RoundToInt(damage * currentProps.lifeStealPercent);
                 ownerHittable.hp += heal;
                 ownerHittable.hp = Mathf.Min(ownerHittable.hp, ownerHittable.max_hp);
-                Debug.Log($"[Vampiric] Healed {heal} HP");
+                Debug.Log($"[Vampiric] Healed {heal} HP. Current: {ownerHittable.hp}/{ownerHittable.max_hp}");
             }
 
             // BIG GUY: Damage all enemies
-            if (props.isBigGuy)
+            if (currentProps != null && currentProps.isBigGuy)
             {
-                float splashDamage = damage * props.splashMultiplier;
+                float splashDamage = damage * currentProps.splashMultiplier;
                 DamageAllEnemies(splashDamage, impact, other);
             }
         }
@@ -95,7 +101,7 @@ public class ArcaneBolt : Spell
         {
             if (go == null) continue;
 
-            EnemyController ec = go.GetComponent<EnemyController>();
+            EnemyController ec = go.GetComponent <EnemyController > ();
             if (ec != null && ec.hp != null && ec.hp.team != team && ec.hp != excludeTarget)
             {
                 ec.hp.Damage(new Damage(Mathf.RoundToInt(damage), damageType));

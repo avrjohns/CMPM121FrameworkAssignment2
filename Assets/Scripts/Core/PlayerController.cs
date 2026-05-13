@@ -27,12 +27,13 @@ public class PlayerController : MonoBehaviour
 
     public void StartLevel()
     {
-        spellcaster = new SpellCaster(125, 8, Hittable.Team.PLAYER, hp);
-        StartCoroutine(spellcaster.ManaRegeneration());
-
         hp = new Hittable(100, Hittable.Team.PLAYER, gameObject);
         hp.OnDeath += Die;
         hp.team = Hittable.Team.PLAYER;
+        spellcaster = new SpellCaster(125, 8, Hittable.Team.PLAYER, hp);
+        StartCoroutine(spellcaster.ManaRegeneration());
+
+
 
         healthui.SetHealth(hp);
         manaui.SetSpellCaster(spellcaster);

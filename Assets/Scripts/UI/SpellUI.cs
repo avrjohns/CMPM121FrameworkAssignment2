@@ -23,7 +23,11 @@ public class SpellUI : MonoBehaviour
     public void SetSpell(Spell spell)
     {
         this.spell = spell;
-        GameManager.Instance.spellIconManager.PlaceSprite(spell.GetIcon(), icon.GetComponent<Image>());
+        int iconIndex = spell.GetIcon();
+        int maxIcons = GameManager.Instance.spellIconManager.GetCount();
+        iconIndex = Mathf.Clamp(iconIndex, 0, maxIcons - 1);
+
+        GameManager.Instance.spellIconManager.PlaceSprite(iconIndex, icon.GetComponent<Image>());
     }
 
     //Update is called once per frame

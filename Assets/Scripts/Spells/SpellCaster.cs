@@ -14,7 +14,7 @@ public class SpellCaster
 
     public float spellPower = 10f;
 
-    private Hittable ownerHittable;
+    public Hittable ownerHittable;
 
     public IEnumerator ManaRegeneration()
     {
@@ -55,7 +55,7 @@ public class SpellCaster
         {
             if (!vb.CanAfford())
             {
-                Debug.Log("[SpellCaster] Not enough HP for Vampire Breath!");
+                Debug.Log("[SpellCaster] not enough hp for vampire");
                 yield break;
             }
         }
@@ -63,7 +63,7 @@ public class SpellCaster
         {
             if (mana < spell.GetManaCost())
             {
-                Debug.Log("[SpellCaster] Not enough mana!");
+                Debug.Log("[SpellCaster] not enough mana");
                 yield break;
             }
             mana -= spell.GetManaCost();
@@ -71,7 +71,7 @@ public class SpellCaster
 
         if (!spell.IsReady())
         {
-            Debug.Log("[SpellCaster] Spell on cooldown!");
+            Debug.Log("[SpellCaster] spell on cooldown now");
             yield break;
         }
 
@@ -86,7 +86,7 @@ public class SpellCaster
     {
         if (spells.Count >= 4)
         {
-            Debug.Log("[SpellCaster] Cannot add spell: maximum 4 spells equipped");
+            Debug.Log("[SpellCaster] cannot add at max 4 spells");
             return;
         }
         spell.ownerHittable = ownerHittable;

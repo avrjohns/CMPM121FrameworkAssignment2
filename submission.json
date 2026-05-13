@@ -1,0 +1,14 @@
+{
+   "team": [
+             {"firstname": "Ava",
+              "lastname": "Johnson",
+              "github": "avrjohns",
+              "email": "avrjohns@ucsc.edu"},
+             {"firstname": "Nandini",
+              "lastname": "Iyer",
+              "github": "Nandinii-12",
+              "email": "naiyer@ucsc.edu"}
+            ],
+   "repository": "git@github.com:avrjohns/CMPM121FrameworkAssignment2.git",
+   "commit": "0123456789abcdef"
+}

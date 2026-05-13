@@ -362,26 +362,54 @@ public class EnemySpawner : MonoBehaviour
 
     public void TakeSpell()
     {
+        var pc = GameManager.Instance.player.GetComponent<PlayerController>();
+        if (pc == null || pc.spellcaster == null) return;
+
+        // Use pendingRewardSpell (not currentRewardSpell)
         if (pendingRewardSpell == null)
         {
-            Debug.Log("pendingRewardSpell is null");
+            Debug.LogWarning("[EnemySpawner] No pending reward spell!");
             return;
         }
 
-        PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
-        pc.spellcaster.AddSpell(pendingRewardSpell);
+        // CRITICAL: Set ownerHittable before adding
+        pendingRewardSpell.ownerHittable = pc.hp;
 
-        int newIndex = pc.spellcaster.spells.Count - 1;
-        if (newIndex < spellUISlots.Length)
+        // Add or replace spell
+        if (pc.spellcaster.spells.Count < 4)
         {
-            spellUISlots[newIndex].gameObject.SetActive(true);
-            spellUISlots[newIndex].SetSpell(pendingRewardSpell);
+            pc.spellcaster.AddSpell(pendingRewardSpell);
+        }
+        else
+        {
+            // Replace selected spell (index 0 for now)
+            pc.spellcaster.ReplaceSpell(0, pendingRewardSpell);
         }
 
-        takeSpellButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Spell Added!";
+        // Update UI manually
+        UpdateSpellSlots(pc);
+
+        // Hide reward and continue
+        rewardScreen.SetActive(false);
         pendingRewardSpell = null;
+        NextWave();
     }
 
+    void UpdateSpellSlots(PlayerController pc)
+    {
+        for (int i = 0; i < spellUISlots.Length; i++)
+        {
+            if (i < pc.spellcaster.spells.Count)
+            {
+                spellUISlots[i].gameObject.SetActive(true);
+                spellUISlots[i].SetSpell(pc.spellcaster.spells[i]);
+            }
+            else
+            {
+                spellUISlots[i].gameObject.SetActive(false);
+            }
+        }
+    }
     public void DropSpell(int index)
     {
         PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();

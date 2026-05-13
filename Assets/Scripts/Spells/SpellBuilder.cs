@@ -70,7 +70,7 @@ public class SpellBuilder
     {
         string baseKey = baseSpellKeys[rng.Next(baseSpellKeys.Count)];
         Spell spell = CreateBaseSpell(baseKey, owner);
-
+        Debug.Log($"[SpellBuilder] Base spell: {spell.GetName()}");
         float probability = 0.7f;
         int maxModifiers = 5;
         int count = 0;
@@ -79,6 +79,7 @@ public class SpellBuilder
         {
             string modKey = modifierKeys[rng.Next(modifierKeys.Count)];
             spell = WrapModifier(modKey, spell, owner);
+            Debug.Log($"[SpellBuilder] Applied modifier: {modKey} | Now: {spell.GetDescription()}");
             probability *= 0.6f;
             count++;
         }

@@ -41,21 +41,21 @@ public abstract class Spell
 
     public bool IsReady() => (last_cast + GetCooldown() < Time.time);
 
-    /// cast method spells implement projectile creation
+    // cast method spells implement projectile creation
     public abstract IEnumerator Cast(Vector3 where, Vector3 target, Hittable.Team team,
                                      float spellPower, int waveNumber);
 
-    /// ModifierSpells override to aggregate inner + their own.
+    // modifier spells override to aggregate inner & their own
 
     public virtual SpellProperties GetProperties()
     {
         return new SpellProperties();
     }
 
-    /// load spell specific attributes from JSON.
+    // load spell specific attributes from JSON.
     public virtual void SetAttributes(JObject attributes) { }
 
-    /// evaluate RPN expressions with power and wave variables.
+    // evaluate RPN expressions with power and wave variables.
     protected float EvalRPN(string expression, float spellPower, int waveNumber)
     {
         if (string.IsNullOrEmpty(expression)) return 0;
