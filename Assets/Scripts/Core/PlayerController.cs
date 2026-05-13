@@ -43,7 +43,10 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        
+        if (Keyboard.current.digit1Key.wasPressedThisFrame) spellcaster.SelectSpell(0);
+        if (Keyboard.current.digit2Key.wasPressedThisFrame) spellcaster.SelectSpell(1);
+        if (Keyboard.current.digit3Key.wasPressedThisFrame) spellcaster.SelectSpell(2);
+        if (Keyboard.current.digit4Key.wasPressedThisFrame) spellcaster.SelectSpell(3);
     }
 
     void OnAttack(InputValue value)
@@ -64,6 +67,15 @@ public class PlayerController : MonoBehaviour
     void Die()
     {
         Debug.Log("You Lost");
+    }
+
+    void OnSelectSpell(InputValue value)
+    {
+        float input = value.Get<float>();
+        if (input > 0)
+            spellcaster.SelectSpell(spellcaster.selectedSpellIndex + 1);
+        else
+            spellcaster.SelectSpell(spellcaster.selectedSpellIndex - 1);
     }
 
 }
