@@ -75,14 +75,16 @@ public class SpellBuilder
         int maxModifiers = 5;
         int count = 0;
 
-        while (rng.NextDouble() < probability && count < maxModifiers)
+        // guarantee at least one modifier
+        do
         {
             string modKey = modifierKeys[rng.Next(modifierKeys.Count)];
             spell = WrapModifier(modKey, spell, owner);
-            Debug.Log($"[SpellBuilder] Applied modifier: {modKey} | Now: {spell.GetDescription()}");
+
             probability *= 0.6f;
             count++;
-        }
+
+        } while (rng.NextDouble() < probability && count < maxModifiers);
 
         return spell;
     }

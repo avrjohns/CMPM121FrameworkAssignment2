@@ -8,7 +8,7 @@ public abstract class Spell
 {
     public float last_cast;
     public SpellCaster owner;
-    public Hittable ownerHittable;
+    public virtual Hittable ownerHittable { get; set; }
     public Hittable.Team team;
     protected string baseName = "Unknown Spell";
     protected string baseDescription = "";

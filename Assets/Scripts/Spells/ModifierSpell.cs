@@ -34,5 +34,11 @@ public abstract class ModifierSpell : Spell
     {
         return innerSpell.GetProperties();
     }
+
+    public override Hittable ownerHittable
+    {
+        get => innerSpell.ownerHittable;
+        set => innerSpell.ownerHittable = value;
+    }
 }
 

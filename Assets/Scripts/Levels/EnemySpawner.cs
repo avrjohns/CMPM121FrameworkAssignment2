@@ -27,6 +27,7 @@ public class EnemySpawner : MonoBehaviour
     public UnityEngine.UI.Button takeSpellButton;
     private Spell pendingRewardSpell;
     public SpellUI[] spellUISlots;
+    private SpellBuilder spellBuilder;
 
 
     void Awake()
@@ -39,6 +40,7 @@ public class EnemySpawner : MonoBehaviour
         Debug.Log($"JSONLoader.Instance.levels count: {JSONLoader.Instance.levels?.Count}");
         Debug.Log($"level_selector: {level_selector}");
         CreateDifficultyButtons();
+        spellBuilder = new SpellBuilder();
     }
     //func to make the buttons appear when func is called
     void CreateDifficultyButtons()
@@ -116,6 +118,8 @@ public class EnemySpawner : MonoBehaviour
                 Destroy(u);
             }
         }
+
+        ResetSpellUI();
 
         gameOverScreen.SetActive(false);
         victoryScreen.SetActive(false);
@@ -306,9 +310,9 @@ public class EnemySpawner : MonoBehaviour
 
         //generate reward spell
         PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
-        SpellBuilder builder = new SpellBuilder();
-        pendingRewardSpell = builder.GenerateRewardSpell(pc.spellcaster, currentWave);
-        spellRewardText.text = $"Spell Reward:\n{pendingRewardSpell.GetName()}";
+        pendingRewardSpell = spellBuilder.GenerateRewardSpell(pc.spellcaster, currentWave);
+        Debug.Log($"Generated Reward: {pendingRewardSpell.GetDescription()}");
+        spellRewardText.text = $"Spell Reward:\n{pendingRewardSpell.GetName()}\n{pendingRewardSpell.GetDescription()}";
         takeSpellButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Take Spell";
 
         rewardScreen.SetActive(true);
@@ -354,7 +358,7 @@ public class EnemySpawner : MonoBehaviour
         pc.spellcaster.mana_reg = Mathf.RoundToInt(RPNEvaluatorWrapper.Evaluatef("10 wave +", vars));
 
         //update spell power
-        pc.spellcaster.spellPower = RPNEvaluatorWrapper.Evaluatef("wave 10 *", vars);
+        pc.spellcaster.spellPower = Mathf.Clamp( RPNEvaluatorWrapper.Evaluatef("wave 10 *", vars), 1f, 50f);
 
         //update speed
         pc.speed = 5;
@@ -419,6 +423,41 @@ public class EnemySpawner : MonoBehaviour
         if (index < spellUISlots.Length)
         {
             spellUISlots[index].gameObject.SetActive(false);
+        }
+    }
+
+    public void ResetSpellUI()
+    {
+        PlayerController pc = GameManager.Instance.player.GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        // Optional but usually correct: keep only starter spell
+        if (pc.spellcaster.spells.Count > 0)
+        {
+            // keep first spell, remove extras
+            Spell first = pc.spellcaster.spells[0];
+            pc.spellcaster.spells.Clear();
+            pc.spellcaster.spells.Add(first);
+        }
+
+        for (int i = 0; i < spellUISlots.Length; i++)
+        {
+            if (spellUISlots[i] == null) continue;
+
+            if (i == 0)
+            {
+                // KEEP SLOT 0 VISIBLE
+                spellUISlots[i].gameObject.SetActive(true);
+
+                // refresh it with the starter spell
+                if (pc.spellcaster.spells.Count > 0)
+                    spellUISlots[i].SetSpell(pc.spellcaster.spells[0]);
+            }
+            else
+            {
+                // hide everything else
+                spellUISlots[i].gameObject.SetActive(false);
+            }
         }
     }
 }

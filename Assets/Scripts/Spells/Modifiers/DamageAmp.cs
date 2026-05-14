@@ -10,11 +10,31 @@ public class DamageAmp : ModifierSpell
     {
         if (data["damage_multiplier"] != null)
             float.TryParse(data["damage_multiplier"].ToString(), out damageMultiplier);
+
         if (data["mana_multiplier"] != null)
             float.TryParse(data["mana_multiplier"].ToString(), out manaMultiplier);
     }
 
-    public override string GetName() => innerSpell.GetName() + " (damage-amplified)";
-    public override float GetDamage() => innerSpell.GetDamage() * damageMultiplier;
-    public override int GetManaCost() => Mathf.RoundToInt(innerSpell.GetManaCost() * manaMultiplier);
+    public override string GetName() =>
+        innerSpell.GetName() + " (damage-amplified)";
+
+    public override string GetDescription() =>
+        innerSpell.GetDescription() + " [Damage Amp]";
+
+    public override SpellProperties GetProperties()
+    {
+        var props = innerSpell.GetProperties();
+
+        // 🔥 DAMAGE scaling (THIS is what makes it actually affect gameplay)
+        props.damageModifiers.Add(
+            new ValueModifier(ValueModifier.Operation.MULTIPLY, damageMultiplier)
+        );
+
+        // 🔥 Mana scaling (cost increase)
+        props.manaCostModifiers.Add(
+            new ValueModifier(ValueModifier.Operation.MULTIPLY, manaMultiplier)
+        );
+
+        return props;
+    }
 }

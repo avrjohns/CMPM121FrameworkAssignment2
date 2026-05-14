@@ -31,36 +31,46 @@ public class ArcaneBolt : Spell
     }
 
     public override IEnumerator Cast(Vector3 where, Vector3 target, Hittable.Team team,
-                                     float spellPower, int waveNumber)
+                                 float spellPower, int waveNumber)
     {
         this.team = team;
         last_cast = Time.time;
 
-        float damage = EvalRPN("25 power 5 / +", spellPower, waveNumber);
-        float speed = EvalRPN("8 power 5 / +", spellPower, waveNumber);
-
+        // ✅ SINGLE source of truth (includes modifiers)
         var props = GetProperties();
-        float finalDamage = props.GetDamage(damage);
-        float finalSpeed = props.GetSpeed(speed);
+        currentProps = props;
+
+        // OPTIONAL: if you still want scaling from wave/power,
+        // it should ONLY influence base stats inside GetProperties, NOT here.
+
+        float finalSpeed = props.GetSpeed(baseProjectileSpeed);
+
         string trajectory = props.projectileTrajectory ?? GetProjectileTrajectory();
         int sprite = props.projectileSprite ?? GetProjectileSprite();
         float? lifetime = props.projectileLifetime ?? GetProjectileLifetime();
 
-        // STORE props so OnHit can access them
-        currentProps = props;
-
         if (lifetime.HasValue)
         {
             GameManager.Instance.projectileManager.CreateProjectile(
-                sprite, trajectory, where, target - where, finalSpeed,
+                sprite,
+                trajectory,
+                where,
+                target - where,
+                finalSpeed,
                 OnHit,
-                lifetime.Value);
+                lifetime.Value
+            );
         }
         else
         {
             GameManager.Instance.projectileManager.CreateProjectile(
-                sprite, trajectory, where, target - where, finalSpeed,
-                OnHit);
+                sprite,
+                trajectory,
+                where,
+                target - where,
+                finalSpeed,
+                OnHit
+            );
         }
 
         yield return new WaitForEndOfFrame();
